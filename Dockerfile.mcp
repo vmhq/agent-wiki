@@ -14,11 +14,17 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/mcp/node_modules ./apps/mcp/node_modules
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/mcp ./apps/mcp
 
+# Build TypeScript
 WORKDIR /app/apps/mcp
 RUN pnpm build
+
+# Use pnpm deploy to create a self-contained directory with flattened
+# node_modules — avoids missing packages from root-level hoisting
+WORKDIR /app
+RUN pnpm deploy --filter mcp --prod /deploy
 
 # ── Runner ────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -31,8 +37,10 @@ ENV WIKI_DIR=/wiki
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 mcpuser
 
+# node_modules from pnpm deploy (properly flattened, no symlinks to pnpm store)
+COPY --from=builder --chown=mcpuser:nodejs /deploy/node_modules ./node_modules
+# compiled output and package.json (needed for "type": "module")
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/dist ./dist
-COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/node_modules ./node_modules
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/package.json ./package.json
 
 USER mcpuser

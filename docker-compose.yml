@@ -63,7 +63,7 @@ services:
       - wiki_data:/wiki
     depends_on:
       mcp:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/wiki"]
