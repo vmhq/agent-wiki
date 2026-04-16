@@ -33,6 +33,9 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV WIKI_DIR=/wiki
 
+# su-exec: drop privileges from root to app user inside entrypoint
+RUN apk add --no-cache su-exec
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
@@ -43,11 +46,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 RUN mkdir -p ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
-# Pre-create /wiki owned by nextjs so Docker initialises the named volume
-# with the correct permissions on first run
-RUN mkdir -p /wiki && chown nextjs:nodejs /wiki
+# Entrypoint: runs as root, fixes /wiki permissions, then drops to nextjs
+COPY docker/entrypoint-web.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-USER nextjs
 EXPOSE 3000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "apps/web/server.js"]

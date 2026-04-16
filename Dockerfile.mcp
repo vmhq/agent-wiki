@@ -17,7 +17,6 @@ COPY --from=deps /app/apps/mcp/node_modules ./apps/mcp/node_modules
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/mcp ./apps/mcp
 
-# Build TypeScript
 WORKDIR /app/apps/mcp
 RUN pnpm build
 
@@ -34,6 +33,9 @@ ENV NODE_ENV=production
 ENV MCP_PORT=3001
 ENV WIKI_DIR=/wiki
 
+# su-exec: drop privileges from root to app user inside entrypoint
+RUN apk add --no-cache su-exec
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 mcpuser
 
@@ -43,11 +45,11 @@ COPY --from=builder --chown=mcpuser:nodejs /deploy/node_modules ./node_modules
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/dist ./dist
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/package.json ./package.json
 
-# Pre-create /wiki owned by mcpuser so Docker initialises the named volume
-# with the correct permissions on first run
-RUN mkdir -p /wiki && chown mcpuser:nodejs /wiki
+# Entrypoint: runs as root, fixes /wiki permissions, then drops to mcpuser
+COPY docker/entrypoint-mcp.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-USER mcpuser
 EXPOSE 3001
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "dist/index.js"]
