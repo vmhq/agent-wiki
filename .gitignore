@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+out/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Misc
+.DS_Store
+*.log
+coverage/
+
+# Wiki data (optional — if you want to track wiki files, remove this)
+# wiki/

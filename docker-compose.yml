@@ -1,0 +1,84 @@
+version: "3.9"
+
+# ── Agent Wiki ────────────────────────────────────────────────────────────────
+#
+# Services:
+#   web  — Next.js 15 web app        → http://localhost:3000
+#   mcp  — MCP server (OAuth + tools) → http://localhost:3001
+#
+# Both services share the `wiki_data` volume mounted at /wiki.
+#
+# Usage:
+#   cp .env.example .env && docker compose up -d
+#   docker compose up -d --build   (after code changes)
+#   docker compose logs -f
+#   docker compose down            (stop)
+#   docker compose down -v         (stop + delete wiki data — destructive!)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── MCP server ──────────────────────────────────────────────────────────────
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    image: ghcr.io/${GITHUB_REPOSITORY:-local/agent-wiki}/mcp:latest
+    container_name: agent-wiki-mcp
+    ports:
+      - "${MCP_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      MCP_PORT: 3001
+      WIKI_DIR: /wiki
+      MCP_BASE_URL: ${MCP_BASE_URL:-http://localhost:3001}
+      WIKI_API_KEY: ${WIKI_API_KEY:?WIKI_API_KEY is required — set it in .env}
+      WIKI_OAUTH_PASSWORD: ${WIKI_OAUTH_PASSWORD:?WIKI_OAUTH_PASSWORD is required — set it in .env}
+      WIKI_JWT_SECRET: ${WIKI_JWT_SECRET:?WIKI_JWT_SECRET is required — set it in .env}
+      WIKI_CLIENT_SECRET: ${WIKI_CLIENT_SECRET:-local-secret}
+    volumes:
+      - wiki_data:/wiki
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Web app ─────────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: ghcr.io/${GITHUB_REPOSITORY:-local/agent-wiki}/web:latest
+    container_name: agent-wiki-web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      WIKI_DIR: /wiki
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - wiki_data:/wiki
+    depends_on:
+      mcp:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/wiki"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  wiki_data:
+    driver: local
+    # To use a host directory instead of a named volume, replace with:
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: /path/to/your/wiki/files

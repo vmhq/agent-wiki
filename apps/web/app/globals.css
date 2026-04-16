@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-wiki-bg: #0f1117;
+  --color-wiki-surface: #1a1d27;
+  --color-wiki-border: #2a2d3a;
+  --color-wiki-text: #e2e4ef;
+  --color-wiki-muted: #8b8fa8;
+  --color-wiki-accent: #7c6af7;
+  --color-wiki-accent-hover: #9b8ff8;
+  --color-wiki-link: #60a5fa;
+  --color-wiki-tag: #1e3a5f;
+  --color-wiki-tag-text: #93c5fd;
+}
+
+body {
+  background-color: var(--color-wiki-bg);
+  color: var(--color-wiki-text);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Markdown prose styles */
+.prose {
+  color: var(--color-wiki-text);
+  max-width: 75ch;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: var(--color-wiki-text);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose h1 { font-size: 2rem; }
+.prose h2 { font-size: 1.5rem; border-bottom: 1px solid var(--color-wiki-border); padding-bottom: 0.3em; }
+.prose h3 { font-size: 1.25rem; }
+
+.prose p { margin-bottom: 1em; line-height: 1.8; }
+
+.prose a {
+  color: var(--color-wiki-link);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.2s;
+}
+.prose a:hover { text-decoration-color: var(--color-wiki-link); }
+
+.prose code {
+  background: var(--color-wiki-surface);
+  border: 1px solid var(--color-wiki-border);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+}
+
+.prose pre {
+  background: var(--color-wiki-surface) !important;
+  border: 1px solid var(--color-wiki-border);
+  border-radius: 8px;
+  padding: 1.25em;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.prose pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.9em;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--color-wiki-accent);
+  padding-left: 1em;
+  color: var(--color-wiki-muted);
+  margin: 1.5em 0;
+  font-style: italic;
+}
+
+.prose ul, .prose ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+.prose li { margin-bottom: 0.3em; line-height: 1.8; }
+.prose ul li { list-style: disc; }
+.prose ol li { list-style: decimal; }
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+}
+.prose th, .prose td {
+  border: 1px solid var(--color-wiki-border);
+  padding: 0.5em 1em;
+  text-align: left;
+}
+.prose th { background: var(--color-wiki-surface); font-weight: 600; }
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--color-wiki-border);
+  margin: 2em 0;
+}
+
+/* Highlight.js theme override for dark */
+.hljs { background: transparent !important; }
+
+/* Graph canvas */
+.graph-container canvas {
+  border-radius: 12px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-wiki-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-wiki-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-wiki-muted); }
