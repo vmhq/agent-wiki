@@ -43,6 +43,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/
 RUN mkdir -p ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
+# Pre-create /wiki owned by nextjs so Docker initialises the named volume
+# with the correct permissions on first run
+RUN mkdir -p /wiki && chown nextjs:nodejs /wiki
+
 USER nextjs
 EXPOSE 3000
 

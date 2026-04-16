@@ -43,6 +43,10 @@ COPY --from=builder --chown=mcpuser:nodejs /deploy/node_modules ./node_modules
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/dist ./dist
 COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/package.json ./package.json
 
+# Pre-create /wiki owned by mcpuser so Docker initialises the named volume
+# with the correct permissions on first run
+RUN mkdir -p /wiki && chown mcpuser:nodejs /wiki
+
 USER mcpuser
 EXPOSE 3001
 
