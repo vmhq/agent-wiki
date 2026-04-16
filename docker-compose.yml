@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mcp
-    image: ghcr.io/${GITHUB_REPOSITORY:-local/agent-wiki}/mcp:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-vmhq/agent-wiki}/mcp:latest
     container_name: agent-wiki-mcp
     ports:
       - "${MCP_PORT:-3001}:3001"
@@ -51,7 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-    image: ghcr.io/${GITHUB_REPOSITORY:-local/agent-wiki}/web:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-vmhq/agent-wiki}/web:latest
     container_name: agent-wiki-web
     ports:
       - "${WEB_PORT:-3000}:3000"

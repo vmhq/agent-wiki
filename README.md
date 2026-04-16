@@ -228,8 +228,8 @@ openssl rand -hex 32
 
 On every push to `main` (and on version tags `v*.*.*`), GitHub Actions builds and pushes two images to GitHub Container Registry:
 
-- `ghcr.io/YOUR_ORG/agent-wiki/web:latest`
-- `ghcr.io/YOUR_ORG/agent-wiki/mcp:latest`
+- `ghcr.io/vmhq/agent-wiki/web:latest`
+- `ghcr.io/vmhq/agent-wiki/mcp:latest`
 
 Images are built for `linux/amd64` and `linux/arm64` with layer caching.
 
@@ -237,7 +237,7 @@ To pull pre-built images instead of building locally:
 
 ```bash
 # Set your GitHub repo in .env
-echo "GITHUB_REPOSITORY=your-username/agent-wiki" >> .env
+echo "GITHUB_REPOSITORY=vmhq/agent-wiki" >> .env
 
 docker compose pull
 docker compose up -d
