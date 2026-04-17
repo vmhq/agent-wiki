@@ -24,7 +24,7 @@ function preprocessWikilinks(content: string): string {
 
 const components: Components = {
   a: ({ href, children, ...props }) => {
-    if (href?.startsWith("/wiki/") || href?.startsWith("/")) {
+    if (href?.startsWith("/wiki/") || href?.startsWith("/") || href?.startsWith("#")) {
       return (
         <Link href={href} className="text-[var(--color-wiki-link)] hover:underline" {...props}>
           {children}
