@@ -1,4 +1,4 @@
-import { getEntry, listEntries } from "@/lib/wiki";
+import { getEntry } from "@/lib/wiki";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { notFound } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -9,10 +9,6 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  return listEntries().map((e) => ({ slug: e.slug }));
 }
 
 export default async function WikiPage({ params }: Props) {
