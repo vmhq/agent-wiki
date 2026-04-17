@@ -22,7 +22,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 font-bold text-white hover:text-[var(--color-wiki-accent)] transition-colors">
-              <BookOpen size={20} className="text-[var(--color-wiki-accent)]" />
+              <span className="text-lg leading-none">📚</span>
               Agent Wiki
             </Link>
 

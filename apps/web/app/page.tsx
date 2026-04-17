@@ -15,7 +15,7 @@ export default function IndexPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">
-          Agent Wiki
+          📚 Agent Wiki
         </h1>
         <p className="text-[var(--color-wiki-muted)] text-sm">
           {entries.length} {entries.length === 1 ? "entry" : "entries"} · AI-maintained knowledge base

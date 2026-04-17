@@ -12,7 +12,7 @@ import {
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
-    name: "agent-wiki",
+    name: "📚 agent-wiki",
     version: "1.0.0",
   });
 
