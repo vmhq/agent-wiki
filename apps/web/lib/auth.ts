@@ -1,0 +1,34 @@
+/**
+ * Lightweight API key auth for Next.js write routes.
+ * Reads WIKI_API_KEY from the environment and validates the Bearer token.
+ */
+import { NextRequest, NextResponse } from "next/server";
+
+const API_KEY = process.env.WIKI_API_KEY ?? "";
+
+/**
+ * Returns null if the request is authorized, or a 401/403 NextResponse if not.
+ * Usage:
+ *   const authError = requireWriteAuth(req);
+ *   if (authError) return authError;
+ */
+export function requireWriteAuth(req: NextRequest): NextResponse | null {
+  // If no API key is configured, write operations are open (dev mode).
+  if (!API_KEY) return null;
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "unauthorized", error_description: "Bearer token required" },
+      { status: 401 }
+    );
+  }
+  const token = authHeader.slice(7);
+  if (token !== API_KEY) {
+    return NextResponse.json(
+      { error: "forbidden", error_description: "Invalid API key" },
+      { status: 403 }
+    );
+  }
+  return null;
+}

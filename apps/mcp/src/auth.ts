@@ -3,7 +3,7 @@
  *
  * Supports:
  *   1. API Key — pass `Authorization: Bearer <WIKI_API_KEY>` header
- *   2. OAuth 2.0 with PKCE — compatible with claude.ai and other MCP clients
+ *   2. OAuth 2.0 with PKCE (S256 required) — compatible with claude.ai and other MCP clients
  *
  * OAuth endpoints:
  *   GET  /.well-known/oauth-authorization-server   — RFC 8414 metadata
@@ -18,23 +18,56 @@ import * as jose from "jose";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 
+// ── Startup checks ────────────────────────────────────────────────────────────
+
 const API_KEY = process.env.WIKI_API_KEY ?? "";
-const JWT_SECRET_RAW = process.env.WIKI_JWT_SECRET ?? uuidv4(); // generate once at startup
+
+// Fail fast if critical secrets are missing in production.
+const JWT_SECRET_RAW = process.env.WIKI_JWT_SECRET;
+if (!JWT_SECRET_RAW) {
+  if (process.env.NODE_ENV === "production") {
+    console.error("FATAL: WIKI_JWT_SECRET must be set in production. Generate with: openssl rand -hex 32");
+    process.exit(1);
+  } else {
+    console.warn("WARN: WIKI_JWT_SECRET not set — using random ephemeral secret (tokens invalid after restart)");
+  }
+}
+const JWT_SECRET_RESOLVED = JWT_SECRET_RAW ?? uuidv4();
+
 const OAUTH_PASSWORD = process.env.WIKI_OAUTH_PASSWORD ?? "changeme";
 const BASE_URL = process.env.MCP_BASE_URL ?? "http://localhost:3001";
 
-const jwtSecret = new TextEncoder().encode(JWT_SECRET_RAW);
+// Default OAuth client secret — must be set in production.
+const DEFAULT_CLIENT_SECRET = process.env.WIKI_CLIENT_SECRET;
+if (!DEFAULT_CLIENT_SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    console.error("FATAL: WIKI_CLIENT_SECRET must be set in production.");
+    process.exit(1);
+  } else {
+    console.warn("WARN: WIKI_CLIENT_SECRET not set — using 'local-secret' for local dev only");
+  }
+}
+const RESOLVED_CLIENT_SECRET = DEFAULT_CLIENT_SECRET ?? "local-secret";
 
-// In-memory stores (replace with DB for production)
+const jwtSecret = new TextEncoder().encode(JWT_SECRET_RESOLVED);
+
+// ── In-memory stores (replace with DB for multi-instance / production) ────────
 const clients = new Map<string, { clientId: string; clientSecret: string; redirectUris: string[]; clientName: string }>();
 const authCodes = new Map<string, { clientId: string; redirectUri: string; codeChallenge: string; codeChallengeMethod: string; expiresAt: number }>();
 
-// Pre-register a default client for local use
+// Cleanup expired auth codes every minute to prevent memory leaks.
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, data] of authCodes.entries()) {
+    if (data.expiresAt < now) authCodes.delete(code);
+  }
+}, 60_000);
+
+// Pre-register a default client for local use.
 const DEFAULT_CLIENT_ID = "agent-wiki-local";
-const DEFAULT_CLIENT_SECRET = process.env.WIKI_CLIENT_SECRET ?? "local-secret";
 clients.set(DEFAULT_CLIENT_ID, {
   clientId: DEFAULT_CLIENT_ID,
-  clientSecret: DEFAULT_CLIENT_SECRET,
+  clientSecret: RESOLVED_CLIENT_SECRET,
   redirectUris: ["http://localhost:3000/oauth/callback", "https://claude.ai/oauth/callback"],
   clientName: "Agent Wiki Local",
 });
@@ -75,14 +108,14 @@ export async function authMiddleware(req: Request, res: Response, next: () => vo
 
   const token = authHeader.slice(7);
 
-  // 1. Try API key
+  // 1. Try API key.
   if (API_KEY && token === API_KEY) {
     (req as Request & { user?: object }).user = { sub: "api-key", scope: "wiki:read wiki:write" };
     next();
     return;
   }
 
-  // 2. Try JWT (OAuth token)
+  // 2. Try JWT (OAuth token).
   const payload = await verifyToken(token);
   if (payload) {
     (req as Request & { user?: object }).user = payload;
@@ -100,8 +133,44 @@ function verifyPKCE(verifier: string, challenge: string, method: string): boolea
     const digest = crypto.createHash("sha256").update(verifier).digest("base64url");
     return digest === challenge;
   }
-  // plain
+  // "plain" is accepted only as a fallback; S256 is preferred and enforced for new clients.
   return verifier === challenge;
+}
+
+// ── HTML escaping ─────────────────────────────────────────────────────────────
+
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ── Redirect URI validation ───────────────────────────────────────────────────
+
+function validateRedirectUris(uris: string[]): string | null {
+  for (const uri of uris) {
+    let parsed: URL;
+    try {
+      parsed = new URL(uri);
+    } catch {
+      return `Invalid URL: ${uri}`;
+    }
+    // Block dangerous schemes.
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return `Disallowed URI scheme '${parsed.protocol}' in: ${uri}`;
+    }
+    // In production, require HTTPS (except localhost for dev clients).
+    if (process.env.NODE_ENV === "production" && parsed.protocol !== "https:") {
+      const isLocalhost = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (!isLocalhost) {
+        return `HTTPS required in production for: ${uri}`;
+      }
+    }
+  }
+  return null;
 }
 
 // ── OAuth router ──────────────────────────────────────────────────────────────
@@ -119,7 +188,8 @@ export function createOAuthRouter(): Router {
       scopes_supported: ["wiki:read", "wiki:write"],
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
-      code_challenge_methods_supported: ["S256", "plain"],
+      // Only S256 — "plain" is insecure and not advertised.
+      code_challenge_methods_supported: ["S256"],
       token_endpoint_auth_methods_supported: ["client_secret_post", "client_secret_basic", "none"],
     });
   });
@@ -127,10 +197,18 @@ export function createOAuthRouter(): Router {
   // Dynamic Client Registration (RFC 7591)
   router.post("/oauth/register", (req, res) => {
     const { client_name, redirect_uris } = req.body as { client_name?: string; redirect_uris?: string[] };
+
     if (!redirect_uris?.length) {
       res.status(400).json({ error: "invalid_client_metadata", error_description: "redirect_uris required" });
       return;
     }
+
+    const uriError = validateRedirectUris(redirect_uris);
+    if (uriError) {
+      res.status(400).json({ error: "invalid_client_metadata", error_description: uriError });
+      return;
+    }
+
     const clientId = uuidv4();
     const clientSecret = uuidv4();
     clients.set(clientId, {
@@ -159,6 +237,12 @@ export function createOAuthRouter(): Router {
       state = "",
       scope = "wiki:read wiki:write",
     } = req.query as Record<string, string>;
+
+    // Enforce PKCE: code_challenge is mandatory.
+    if (!code_challenge) {
+      res.status(400).send(errorPage("PKCE required: code_challenge parameter is missing"));
+      return;
+    }
 
     const client = clients.get(client_id);
     if (!client) {
@@ -245,33 +329,39 @@ export function createOAuthRouter(): Router {
       return;
     }
 
-    // Verify client
+    // Verify client.
     const client = clients.get(client_id ?? stored.clientId);
     if (!client) {
       res.status(401).json({ error: "invalid_client" });
       return;
     }
-    // Verify secret (optional for public clients that used PKCE)
+    // Verify secret (optional for public clients using PKCE).
     if (client_secret && client.clientSecret !== client_secret) {
       res.status(401).json({ error: "invalid_client", error_description: "client_secret mismatch" });
       return;
     }
-    // PKCE verification (required when code_challenge was provided)
-    if (stored.codeChallenge) {
-      if (!code_verifier) {
-        res.status(400).json({ error: "invalid_grant", error_description: "code_verifier required" });
-        return;
-      }
-      if (!verifyPKCE(code_verifier, stored.codeChallenge, stored.codeChallengeMethod)) {
-        res.status(400).json({ error: "invalid_grant", error_description: "PKCE verification failed" });
-        return;
-      }
+
+    // PKCE is mandatory — always verify.
+    if (!stored.codeChallenge) {
+      // Should not happen given we enforce it in /authorize, but be safe.
+      res.status(400).json({ error: "invalid_grant", error_description: "PKCE was not used during authorization" });
+      return;
     }
+    if (!code_verifier) {
+      res.status(400).json({ error: "invalid_grant", error_description: "code_verifier is required" });
+      return;
+    }
+    if (!verifyPKCE(code_verifier, stored.codeChallenge, stored.codeChallengeMethod)) {
+      res.status(400).json({ error: "invalid_grant", error_description: "PKCE verification failed" });
+      return;
+    }
+
     if (stored.redirectUri !== redirect_uri) {
       res.status(400).json({ error: "invalid_grant", error_description: "redirect_uri mismatch" });
       return;
     }
 
+    // Consume code immediately (single-use).
     authCodes.delete(code);
 
     const accessToken = await signToken(client_id, "wiki:read wiki:write");
@@ -302,7 +392,7 @@ function authorizePage(opts: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Authorize — Agent Wiki</title>
+  <title>Authorize — 📚 Agent Wiki</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #0f1117; color: #e2e4ef; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
@@ -326,20 +416,20 @@ function authorizePage(opts: {
 </head>
 <body>
   <div class="card">
-    <h1>Authorize Access</h1>
-    <p><span class="app-name">${opts.client?.clientName ?? "An application"}</span> wants to access your Agent Wiki</p>
-    ${opts.error ? `<p class="error">${opts.error}</p>` : ""}
+    <h1>📚 Authorize Access</h1>
+    <p><span class="app-name">${escHtml(opts.client?.clientName ?? "An application")}</span> wants to access your Agent Wiki</p>
+    ${opts.error ? `<p class="error">${escHtml(opts.error)}</p>` : ""}
     <div class="scopes">
       Requested scopes:
-      ${opts.scope.split(" ").map((s) => `<span>${s}</span>`).join("")}
+      ${opts.scope.split(" ").map((s) => `<span>${escHtml(s)}</span>`).join("")}
     </div>
     <form method="POST" action="/oauth/authorize">
-      <input type="hidden" name="client_id" value="${opts.client?.clientId ?? ""}">
-      <input type="hidden" name="redirect_uri" value="${opts.redirect_uri}">
-      <input type="hidden" name="code_challenge" value="${opts.code_challenge}">
-      <input type="hidden" name="code_challenge_method" value="${opts.code_challenge_method}">
-      <input type="hidden" name="state" value="${opts.state}">
-      <input type="hidden" name="scope" value="${opts.scope}">
+      <input type="hidden" name="client_id" value="${escHtml(opts.client?.clientId ?? "")}">
+      <input type="hidden" name="redirect_uri" value="${escHtml(opts.redirect_uri)}">
+      <input type="hidden" name="code_challenge" value="${escHtml(opts.code_challenge)}">
+      <input type="hidden" name="code_challenge_method" value="${escHtml(opts.code_challenge_method)}">
+      <input type="hidden" name="state" value="${escHtml(opts.state)}">
+      <input type="hidden" name="scope" value="${escHtml(opts.scope)}">
       <label for="password">Wiki password</label>
       <input type="password" id="password" name="password" placeholder="Enter your wiki password" autofocus>
       <div class="buttons">
@@ -353,5 +443,5 @@ function authorizePage(opts: {
 }
 
 function errorPage(message: string): string {
-  return `<!DOCTYPE html><html><body style="background:#0f1117;color:#f87171;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;"><p>${message}</p></body></html>`;
+  return `<!DOCTYPE html><html><body style="background:#0f1117;color:#f87171;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;"><p>${escHtml(message)}</p></body></html>`;
 }

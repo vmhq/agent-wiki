@@ -20,8 +20,19 @@ function ensureWikiDir() {
   }
 }
 
+const SLUG_RE = /^[a-z0-9-]+$/;
+
 function slugToPath(slug: string): string {
-  return path.join(WIKI_DIR, `${slug}.md`);
+  // Defense-in-depth: validate slug at the filesystem layer, not just HTTP.
+  if (!SLUG_RE.test(slug)) {
+    throw new Error(`Invalid slug: '${slug}' — must match [a-z0-9-]+`);
+  }
+  const resolved = path.resolve(WIKI_DIR, `${slug}.md`);
+  // Prevent path traversal: ensure resolved path is inside WIKI_DIR.
+  if (!resolved.startsWith(path.resolve(WIKI_DIR) + path.sep)) {
+    throw new Error("Path traversal detected");
+  }
+  return resolved;
 }
 
 export function listEntries(): Omit<WikiEntry, "content">[] {

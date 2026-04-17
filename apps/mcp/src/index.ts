@@ -21,8 +21,11 @@ const PORT = parseInt(process.env.MCP_PORT ?? "3001", 10);
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Limit request bodies to prevent DoS via large payloads.
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+// CORS: open to all origins — required for MCP clients (claude.ai, etc.) that
+// connect from arbitrary origins. Auth is enforced via Bearer token, not CORS.
 app.use(
   cors({
     origin: "*",

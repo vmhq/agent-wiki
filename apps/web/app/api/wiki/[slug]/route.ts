@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEntry, updateEntry, patchEntry, deleteEntry } from "@/lib/wiki";
+import { requireWriteAuth } from "@/lib/auth";
 
 interface Ctx {
   params: Promise<{ slug: string }>;
@@ -13,6 +14,8 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
+  const authError = requireWriteAuth(req);
+  if (authError) return authError;
   const { slug } = await params;
   try {
     const body = await req.json();
@@ -35,6 +38,8 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const authError = requireWriteAuth(req);
+  if (authError) return authError;
   const { slug } = await params;
   try {
     const body = await req.json();
@@ -59,7 +64,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: Ctx) {
+export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const authError = requireWriteAuth(req);
+  if (authError) return authError;
   const { slug } = await params;
   try {
     deleteEntry(slug);

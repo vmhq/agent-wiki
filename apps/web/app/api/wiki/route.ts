@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listEntries, createEntry } from "@/lib/wiki";
+import { requireWriteAuth } from "@/lib/auth";
 
 export async function GET() {
   try {
@@ -11,6 +12,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const authError = requireWriteAuth(req);
+  if (authError) return authError;
   try {
     const body = await req.json();
     const { slug, title, content, tags } = body as {
