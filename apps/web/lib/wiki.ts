@@ -5,12 +5,13 @@ import {
   type GraphData,
   type GraphLink,
   type GraphNode,
+  type MaintenanceReport,
   type PatchOperation,
   type WikiEntry,
   type WikiMeta,
 } from "@agent-wiki/wiki";
 
-export type { Backlink, GraphData, GraphLink, GraphNode, PatchOperation, WikiEntry, WikiMeta };
+export type { Backlink, GraphData, GraphLink, GraphNode, MaintenanceReport, PatchOperation, WikiEntry, WikiMeta };
 export {
   createEntrySchema,
   errorStatus,
@@ -35,4 +36,5 @@ export const deleteEntry = store.deleteEntry;
 export const searchEntries = store.searchEntries;
 export const getGraphData = store.getGraphData;
 export const getBacklinks = store.getBacklinks;
+export const getMaintenanceReport = store.getMaintenanceReport;
 export const listHistory = store.listHistory;

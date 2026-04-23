@@ -78,6 +78,13 @@ export interface Backlink {
   excerpt: string;
 }
 
+export interface MaintenanceReport {
+  missing: Array<{ slug: string; sources: Backlink[] }>;
+  orphans: WikiMeta[];
+  stale: WikiMeta[];
+  untagged: WikiMeta[];
+}
+
 interface CacheState {
   signature: string;
   metas: WikiMeta[];
@@ -416,6 +423,46 @@ export function createWikiStore(wikiDir: string) {
     return backlinks.sort((a, b) => a.title.localeCompare(b.title));
   }
 
+  function getMaintenanceReport(): MaintenanceReport {
+    const current = refreshCache();
+    const slugSet = new Set(current.metas.map((entry) => entry.slug));
+    const inbound = new Map<string, number>();
+    const missingSources = new Map<string, Backlink[]>();
+    const staleCutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+
+    for (const entry of current.entries.values()) {
+      for (const target of extractLinks(entry.content)) {
+        if (target === entry.slug) continue;
+        if (slugSet.has(target)) {
+          inbound.set(target, (inbound.get(target) ?? 0) + 1);
+        } else {
+          const sources = missingSources.get(target) ?? [];
+          sources.push({ slug: entry.slug, title: entry.title, excerpt: entry.excerpt });
+          missingSources.set(target, sources);
+        }
+      }
+    }
+
+    const missing = Array.from(missingSources.entries())
+      .map(([slug, sources]) => ({
+        slug,
+        sources: sources.sort((a, b) => a.title.localeCompare(b.title)),
+      }))
+      .sort((a, b) => b.sources.length - a.sources.length || a.slug.localeCompare(b.slug));
+
+    const orphans = current.metas
+      .filter((entry) => !inbound.has(entry.slug))
+      .sort((a, b) => a.title.localeCompare(b.title));
+    const stale = current.metas
+      .filter((entry) => Number.isNaN(Date.parse(entry.updated)) || new Date(entry.updated).getTime() < staleCutoff)
+      .sort((a, b) => new Date(a.updated).getTime() - new Date(b.updated).getTime());
+    const untagged = current.metas
+      .filter((entry) => entry.tags.length === 0)
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    return { missing, orphans, stale, untagged };
+  }
+
   function listHistory(slug: string): string[] {
     validateSlug(slug);
     const historyDir = path.join(wikiDir, ".history", slug);
@@ -435,6 +482,7 @@ export function createWikiStore(wikiDir: string) {
     searchEntries,
     getGraphData,
     getBacklinks,
+    getMaintenanceReport,
     listHistory,
     invalidate,
   };

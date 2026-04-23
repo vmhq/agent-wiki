@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { WikiEditor } from "@/components/editor/WikiEditor";
-import { getEntry } from "@/lib/wiki";
+import { getEntry, listEntries } from "@/lib/wiki";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +13,7 @@ export default async function EditPage({ params }: Props) {
   const { slug: slugParts } = await params;
   const slug = slugParts?.[0];
   const entry = slug ? getEntry(slug) : undefined;
-  if (slug && !entry) notFound();
+  const existingSlugs = listEntries().map((item) => item.slug);
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -32,7 +31,7 @@ export default async function EditPage({ params }: Props) {
         <h1 className="text-3xl font-bold text-white mb-2">{entry ? "Edit Entry" : "New Entry"}</h1>
       </div>
 
-      <WikiEditor entry={entry ?? undefined} />
+      <WikiEditor entry={entry ?? undefined} initialSlug={slug ?? ""} existingSlugs={existingSlugs} />
     </div>
   );
 }

@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, FileText, KeyRound, Save, Trash2 } from "lucide-react";
+import { Columns2, Eye, FileText, KeyRound, Save, Trash2 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import type { WikiEntry } from "@/lib/wiki";
 
 interface Props {
   entry?: WikiEntry;
+  initialSlug?: string;
+  existingSlugs?: string[];
 }
 
 function splitTags(value: string): string[] {
@@ -29,14 +31,14 @@ function getStoredKey(): string {
   return window.localStorage.getItem("agent-wiki-api-key") ?? "";
 }
 
-export function WikiEditor({ entry }: Props) {
+export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Props) {
   const router = useRouter();
   const [title, setTitle] = useState(entry?.title ?? "");
-  const [slug, setSlug] = useState(entry?.slug ?? "");
+  const [slug, setSlug] = useState(entry?.slug ?? initialSlug);
   const [tags, setTags] = useState(entry?.tags.join(", ") ?? "");
   const [content, setContent] = useState(entry?.content ?? "# Untitled\n\nStart writing...");
   const [apiKey, setApiKey] = useState(getStoredKey);
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [mode, setMode] = useState<"edit" | "split" | "preview">("split");
   const [status, setStatus] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -157,6 +159,14 @@ export function WikiEditor({ entry }: Props) {
           </button>
           <button
             type="button"
+            onClick={() => setMode("split")}
+            title="Split"
+            className={`p-1.5 rounded-md transition-colors ${mode === "split" ? "bg-[var(--color-wiki-accent)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+          >
+            <Columns2 size={15} />
+          </button>
+          <button
+            type="button"
             onClick={() => setMode("preview")}
             title="Preview"
             className={`p-1.5 rounded-md transition-colors ${mode === "preview" ? "bg-[var(--color-wiki-accent)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
@@ -200,10 +210,22 @@ export function WikiEditor({ entry }: Props) {
           spellCheck={false}
           className="min-h-[560px] w-full resize-y rounded-lg bg-[#0a0c12] border border-[var(--color-wiki-border)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:border-[var(--color-wiki-accent)]"
         />
-      ) : (
+      ) : mode === "preview" ? (
         <article className="prose min-h-[560px] rounded-lg border border-[var(--color-wiki-border)] bg-[#0a0c12] px-5 py-4">
-          <MarkdownRenderer content={content} />
+          <MarkdownRenderer content={content} existingSlugs={existingSlugs} />
         </article>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <textarea
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            spellCheck={false}
+            className="min-h-[620px] w-full resize-y rounded-lg bg-[#0a0c12] border border-[var(--color-wiki-border)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:border-[var(--color-wiki-accent)]"
+          />
+          <article className="prose min-h-[620px] overflow-y-auto rounded-lg border border-[var(--color-wiki-border)] bg-[#0a0c12] px-5 py-4">
+            <MarkdownRenderer content={content} existingSlugs={existingSlugs} />
+          </article>
+        </div>
       )}
     </div>
   );

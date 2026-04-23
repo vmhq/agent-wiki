@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Search, GitGraph, Terminal, SquarePen } from "lucide-react";
+import { BookOpen, Search, GitGraph, Terminal, SquarePen, Wrench } from "lucide-react";
 import clsx from "clsx";
 
 const MCP_PORT = process.env.NEXT_PUBLIC_MCP_PORT ?? "3001";
@@ -11,10 +11,11 @@ const links = [
   { href: "/", label: "Wiki", icon: BookOpen },
   { href: "/search", label: "Search", icon: Search },
   { href: "/graph", label: "Graph", icon: GitGraph },
+  { href: "/maintenance", label: "Audit", icon: Wrench },
   { href: "/edit", label: "New", icon: SquarePen },
 ];
 
-export function Navbar() {
+export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -47,6 +48,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
+            {commandPalette}
             <a
               href={`http://localhost:${MCP_PORT}/health`}
               target="_blank"

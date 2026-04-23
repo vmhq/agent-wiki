@@ -34,6 +34,9 @@ test("builds graph data with missing nodes and backlinks", () => {
   const graph = store.getGraphData();
   assert.equal(graph.nodes.some((node) => node.id === "ghost" && node.missing), true);
   assert.deepEqual(store.getBacklinks("beta").map((link) => link.slug), ["alpha"]);
+  const report = store.getMaintenanceReport();
+  assert.deepEqual(report.missing.map((item) => item.slug), ["ghost"]);
+  assert.deepEqual(report.orphans.map((item) => item.slug), ["alpha"]);
 });
 
 test("patch operations fail when anchors are missing", () => {

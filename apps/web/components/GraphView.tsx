@@ -1,9 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Maximize2, Search, X, ZoomIn, ZoomOut } from "lucide-react";
+import { ExternalLink, Maximize2, Pencil, Search, X, ZoomIn, ZoomOut } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ForceGraph2D = dynamic<any>(() => import("react-force-graph-2d"), { ssr: false });
@@ -48,7 +48,6 @@ function getNodeColor(node: GraphNode, tagColorMap: Map<string, string>): string
 }
 
 export function GraphView({ data }: Props) {
-  const router = useRouter();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const graphRef = useRef<any>(null);
   const hoveredRef = useRef<GraphNode | null>(null);
@@ -56,6 +55,7 @@ export function GraphView({ data }: Props) {
   const zoomFitted = useRef(false);
   const [query, setQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState("all");
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   const allTags = useMemo(
     () => Array.from(new Set(data.nodes.flatMap((node) => node.tags))).sort(),
@@ -65,6 +65,25 @@ export function GraphView({ data }: Props) {
     () => new Map(allTags.map((tag, i) => [tag, TAG_COLORS[i % TAG_COLORS.length]])),
     [allTags]
   );
+
+  const nodeById = useMemo(() => new Map(data.nodes.map((node) => [node.id, node])), [data.nodes]);
+
+  const selectedConnections = useMemo(() => {
+    if (!selectedNode) return { inbound: [] as GraphNode[], outbound: [] as GraphNode[] };
+    const inbound: GraphNode[] = [];
+    const outbound: GraphNode[] = [];
+    for (const link of data.links) {
+      if (link.source === selectedNode.id) {
+        const target = nodeById.get(link.target);
+        if (target) outbound.push(target);
+      }
+      if (link.target === selectedNode.id) {
+        const source = nodeById.get(link.source);
+        if (source) inbound.push(source);
+      }
+    }
+    return { inbound, outbound };
+  }, [data.links, nodeById, selectedNode]);
 
   const visibleData = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -93,9 +112,9 @@ export function GraphView({ data }: Props) {
 
   const handleClick = useCallback(
     (node: GraphNode) => {
-      if (!node.missing) router.push(`/wiki/${node.id}`);
+      setSelectedNode(node);
     },
-    [router]
+    []
   );
 
   const handleNodeHover = useCallback((node: GraphNode | null) => {
@@ -283,6 +302,98 @@ export function GraphView({ data }: Props) {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {selectedNode && (
+        <div className="absolute bottom-4 right-4 top-4 z-20 w-[min(360px,calc(100%-2rem))] overflow-y-auto rounded-xl border border-[var(--color-wiki-border)] bg-[var(--color-wiki-bg)]/95 p-4 shadow-2xl backdrop-blur-sm">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold text-white">{selectedNode.name}</p>
+              <p className="mt-1 text-xs text-[var(--color-wiki-muted)]">/{selectedNode.id}</p>
+            </div>
+            <button type="button" onClick={() => setSelectedNode(null)} className="text-[var(--color-wiki-muted)] hover:text-white">
+              <X size={17} />
+            </button>
+          </div>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {selectedNode.missing ? (
+              <Link
+                href={`/edit/${selectedNode.id}`}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--color-wiki-accent-hover)]"
+              >
+                <Pencil size={14} />
+                Create
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href={`/wiki/${selectedNode.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--color-wiki-accent-hover)]"
+                >
+                  <ExternalLink size={14} />
+                  Open
+                </Link>
+                <Link
+                  href={`/edit/${selectedNode.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-wiki-border)] px-3 py-2 text-sm text-[var(--color-wiki-muted)] hover:text-white"
+                >
+                  <Pencil size={14} />
+                  Edit
+                </Link>
+              </>
+            )}
+          </div>
+
+          {selectedNode.tags.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              {selectedNode.tags.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setSelectedTag(tag)}
+                  className="rounded-full bg-[var(--color-wiki-tag)] px-2 py-1 text-[11px] text-[var(--color-wiki-tag-text)]"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <section className="mb-4">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-wiki-muted)]">Backlinks</h3>
+            <div className="space-y-1">
+              {selectedConnections.inbound.map((node) => (
+                <button
+                  key={node.id}
+                  type="button"
+                  onClick={() => setSelectedNode(node)}
+                  className="block w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-left text-sm text-white hover:border-[var(--color-wiki-accent)]"
+                >
+                  {node.name}
+                </button>
+              ))}
+              {selectedConnections.inbound.length === 0 && <p className="text-sm text-[var(--color-wiki-muted)]">No backlinks.</p>}
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--color-wiki-muted)]">Outgoing</h3>
+            <div className="space-y-1">
+              {selectedConnections.outbound.map((node) => (
+                <button
+                  key={node.id}
+                  type="button"
+                  onClick={() => setSelectedNode(node)}
+                  className="block w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-left text-sm text-white"
+                >
+                  {node.name}
+                </button>
+              ))}
+              {selectedConnections.outbound.length === 0 && <p className="text-sm text-[var(--color-wiki-muted)]">No outgoing links.</p>}
+            </div>
+          </section>
         </div>
       )}
     </div>

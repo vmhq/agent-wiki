@@ -6,9 +6,7 @@ const nextConfig: NextConfig = {
   // Required for pnpm monorepos: traces files relative to the monorepo root
   // so the standalone output preserves the apps/web/server.js path structure
   outputFileTracingRoot: path.join(__dirname, "../../"),
-  env: {
-    WIKI_DIR: process.env.WIKI_DIR ?? "/wiki",
-  },
+  ...(process.env.WIKI_DIR ? { env: { WIKI_DIR: process.env.WIKI_DIR } } : {}),
 };
 
 export default nextConfig;

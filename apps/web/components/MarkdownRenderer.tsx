@@ -11,22 +11,34 @@ import "highlight.js/styles/github-dark.css";
 
 interface Props {
   content: string;
+  existingSlugs?: string[];
 }
 
 // Convert [[wikilinks]] to markdown links before parsing
-function preprocessWikilinks(content: string): string {
+function preprocessWikilinks(content: string, existingSlugs?: Set<string>): string {
   return content.replace(/\[\[([^\]]+)\]\]/g, (_, inner) => {
     const [slug, label] = inner.split("|").map((s: string) => s.trim());
     const href = `/wiki/${slug.toLowerCase().replace(/\s+/g, "-")}`;
-    return `[${label ?? slug}](${href})`;
+    const normalizedSlug = href.replace("/wiki/", "");
+    const target = existingSlugs && !existingSlugs.has(normalizedSlug) ? `/edit/${normalizedSlug}` : href;
+    return `[${label ?? slug}](${target})`;
   });
 }
 
 const components: Components = {
   a: ({ href, children, ...props }) => {
     if (href?.startsWith("/wiki/") || href?.startsWith("/") || href?.startsWith("#")) {
+      const isMissingWikilink = href.startsWith("/edit/");
       return (
-        <Link href={href} className="text-[var(--color-wiki-link)] hover:underline" {...props}>
+        <Link
+          href={href}
+          className={
+            isMissingWikilink
+              ? "rounded border border-dashed border-[#fbbf24]/50 px-1 text-[#fbbf24] no-underline hover:bg-[#fbbf24]/10"
+              : "text-[var(--color-wiki-link)] hover:underline"
+          }
+          {...props}
+        >
           {children}
         </Link>
       );
@@ -39,8 +51,8 @@ const components: Components = {
   },
 };
 
-export function MarkdownRenderer({ content }: Props) {
-  const processed = preprocessWikilinks(content);
+export function MarkdownRenderer({ content, existingSlugs }: Props) {
+  const processed = preprocessWikilinks(content, existingSlugs ? new Set(existingSlugs) : undefined);
 
   return (
     <ReactMarkdown

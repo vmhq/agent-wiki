@@ -1,4 +1,4 @@
-import { getBacklinks, getEntry } from "@/lib/wiki";
+import { getBacklinks, getEntry, listEntries } from "@/lib/wiki";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { notFound } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -16,6 +16,7 @@ export default async function WikiPage({ params }: Props) {
   const entry = getEntry(slug);
   if (!entry) notFound();
   const backlinks = getBacklinks(slug);
+  const existingSlugs = listEntries().map((item) => item.slug);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -70,7 +71,7 @@ export default async function WikiPage({ params }: Props) {
 
       {/* Content */}
       <article className="prose">
-        <MarkdownRenderer content={entry.content} />
+        <MarkdownRenderer content={entry.content} existingSlugs={existingSlugs} />
       </article>
 
       {backlinks.length > 0 && (
