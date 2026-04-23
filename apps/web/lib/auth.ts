@@ -13,8 +13,16 @@ const API_KEY = process.env.WIKI_API_KEY ?? "";
  *   if (authError) return authError;
  */
 export function requireWriteAuth(req: NextRequest): NextResponse | null {
-  // If no API key is configured, write operations are open (dev mode).
-  if (!API_KEY) return null;
+  // Local development can run without an API key. Production never should.
+  if (!API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { error: "server_misconfigured", error_description: "WIKI_API_KEY is required for write operations" },
+        { status: 503 }
+      );
+    }
+    return null;
+  }
 
   const authHeader = req.headers.get("authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) {

@@ -14,6 +14,9 @@ importers:
 
   apps/mcp:
     dependencies:
+      '@agent-wiki/wiki':
+        specifier: workspace:*
+        version: link:../../packages/wiki
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.0
         version: 1.29.0(zod@3.25.76)
@@ -57,6 +60,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@agent-wiki/wiki':
+        specifier: workspace:*
+        version: link:../../packages/wiki
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -115,6 +121,25 @@ importers:
       tailwindcss:
         specifier: ^4.1.4
         version: 4.2.2
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/wiki:
+    dependencies:
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.19.17
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
       typescript:
         specifier: ^5
         version: 5.9.3

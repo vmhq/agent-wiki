@@ -7,6 +7,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/mcp/package.json ./apps/mcp/
+COPY packages/wiki/package.json ./packages/wiki/
 RUN pnpm install --frozen-lockfile --filter mcp...
 
 # ── Builder ───────────────────────────────────────────────────────────────────
@@ -14,9 +15,12 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/mcp/node_modules ./apps/mcp/node_modules
+COPY --from=deps /app/packages/wiki/node_modules ./packages/wiki/node_modules
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/wiki ./packages/wiki
 COPY apps/mcp ./apps/mcp
 
+RUN pnpm --filter @agent-wiki/wiki build
 WORKDIR /app/apps/mcp
 RUN pnpm build
 

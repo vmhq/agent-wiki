@@ -1,4 +1,4 @@
-import { getEntry } from "@/lib/wiki";
+import { getBacklinks, getEntry } from "@/lib/wiki";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { notFound } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -15,18 +15,28 @@ export default async function WikiPage({ params }: Props) {
   const { slug } = await params;
   const entry = getEntry(slug);
   if (!entry) notFound();
+  const backlinks = getBacklinks(slug);
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Breadcrumb */}
       <div className="mb-6">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] transition-colors"
-        >
-          <ArrowLeft size={14} />
-          Back to index
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Back to index
+          </Link>
+          <Link
+            href={`/edit/${slug}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-wiki-border)] px-3 py-1.5 text-sm text-[var(--color-wiki-muted)] hover:border-[var(--color-wiki-accent)]/60 hover:text-white transition-colors"
+          >
+            <Edit size={14} />
+            Edit
+          </Link>
+        </div>
       </div>
 
       {/* Header */}
@@ -62,6 +72,26 @@ export default async function WikiPage({ params }: Props) {
       <article className="prose">
         <MarkdownRenderer content={entry.content} />
       </article>
+
+      {backlinks.length > 0 && (
+        <section className="mt-12 pt-6 border-t border-[var(--color-wiki-border)]">
+          <h2 className="text-sm font-semibold text-white mb-3">Backlinks</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {backlinks.map((link) => (
+              <Link
+                key={link.slug}
+                href={`/wiki/${link.slug}`}
+                className="block rounded-lg border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] px-4 py-3 hover:border-[var(--color-wiki-accent)]/60 transition-colors"
+              >
+                <p className="text-sm font-medium text-white">{link.title}</p>
+                {link.excerpt && (
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-wiki-muted)] line-clamp-2">{link.excerpt}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <div className="mt-12 pt-6 border-t border-[var(--color-wiki-border)] text-xs text-[var(--color-wiki-muted)] flex justify-between items-center">

@@ -6,8 +6,9 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 
 | Component | Port | Description |
 |-----------|------|-------------|
-| **Web app** | `3000` | Index, Markdown viewer, full-text search, Obsidian-style graph |
+| **Web app** | `3000` | Index, editor, Markdown viewer, full-text search, Obsidian-style graph |
 | **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
+| **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
 
 **Stack:** Next.js 15 · TypeScript · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express · OAuth 2.0 + PKCE · pnpm workspaces · Docker · GitHub Actions
 
@@ -73,7 +74,9 @@ agent-wiki/
 │           ├── index.ts        # Express server (Streamable HTTP + SSE)
 │           ├── server.ts       # MCP tools definition
 │           ├── auth.ts         # OAuth 2.0 server + API key middleware
-│           └── wiki.ts         # Storage layer
+│           └── wiki.ts         # Wiki core adapter
+├── packages/
+│   └── wiki/                   # Shared storage, schemas, cache, graph, history
 ├── wiki/                       # Markdown files (Docker shared volume)
 ├── Dockerfile.web
 ├── Dockerfile.mcp
@@ -121,7 +124,7 @@ Base URL: `http://localhost:3000/api`
 | `PATCH` | `/wiki/:slug` | `{operation, ...}` | Patch entry (see below) |
 | `DELETE` | `/wiki/:slug` | — | Delete entry |
 | `GET` | `/search?q=...` | — | Full-text search |
-| `GET` | `/graph` | — | Graph nodes + links |
+| `GET` | `/graph` | — | Graph nodes + links, including missing linked pages |
 
 ### PATCH operations
 
@@ -146,7 +149,7 @@ Base URL: `http://localhost:3000/api`
 
 ## MCP server
 
-The MCP server runs on port `3001` and exposes 7 tools to any MCP-compatible client (Claude Desktop, claude.ai, custom agents).
+The MCP server runs on port `3001` and exposes tools to any MCP-compatible client (Claude Desktop, claude.ai, custom agents).
 
 ### Available tools
 
@@ -159,6 +162,9 @@ The MCP server runs on port `3001` and exposes 7 tools to any MCP-compatible cli
 | `wiki_patch` | Modify part of an entry (append / prepend / replace / insert) |
 | `wiki_delete` | Delete an entry |
 | `wiki_search` | Full-text search across all entries |
+| `wiki_backlinks` | List entries that link to a slug |
+| `wiki_graph` | Return graph data, including missing linked pages |
+| `wiki_history` | List saved snapshots for an entry |
 
 ### Connecting from Claude Desktop
 

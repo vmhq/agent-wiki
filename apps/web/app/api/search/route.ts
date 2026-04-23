@@ -6,6 +6,10 @@ export async function GET(req: NextRequest) {
   if (!q.trim()) {
     return NextResponse.json({ results: [] });
   }
-  const results = searchEntries(q.trim());
-  return NextResponse.json({ results: results.map(({ content: _, ...meta }) => meta) });
+  try {
+    const results = searchEntries(q.trim());
+    return NextResponse.json({ results: results.map(({ content: _, ...meta }) => meta) });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
+  }
 }

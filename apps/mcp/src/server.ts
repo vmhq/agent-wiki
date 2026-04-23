@@ -8,6 +8,13 @@ import {
   patchEntry,
   deleteEntry,
   searchEntries,
+  getBacklinks,
+  getGraphData,
+  listHistory,
+  createEntrySchema,
+  patchEntrySchema,
+  updateEntrySchema,
+  slugSchema,
 } from "./wiki.js";
 
 export function createMcpServer(): McpServer {
@@ -60,9 +67,9 @@ export function createMcpServer(): McpServer {
     "wiki_create",
     "Create a new wiki entry. The slug must be unique, lowercase, and use hyphens (e.g., 'neural-networks'). Content should be Markdown. Use [[wikilink]] syntax to link to other entries.",
     {
-      slug: z.string().regex(/^[a-z0-9-]+$/).describe("Unique slug: lowercase letters, numbers, hyphens only"),
-      title: z.string().describe("Human-readable title"),
-      content: z.string().describe("Markdown content of the entry"),
+      slug: createEntrySchema.shape.slug.describe("Unique slug: lowercase letters, numbers, hyphens only"),
+      title: createEntrySchema.shape.title.describe("Human-readable title"),
+      content: createEntrySchema.shape.content.describe("Markdown content of the entry"),
       tags: z.array(z.string()).optional().describe("Optional list of tags for categorization"),
     },
     async ({ slug, title, content, tags }) => {
@@ -85,9 +92,9 @@ export function createMcpServer(): McpServer {
     "wiki_update",
     "Replace the full content of an existing wiki entry. Use this for complete rewrites. For partial edits, prefer wiki_patch.",
     {
-      slug: z.string().describe("The entry slug to update"),
-      content: z.string().describe("New Markdown content (replaces existing content entirely)"),
-      title: z.string().optional().describe("Optional new title (keeps existing title if omitted)"),
+      slug: slugSchema.describe("The entry slug to update"),
+      content: updateEntrySchema.shape.content.describe("New Markdown content (replaces existing content entirely)"),
+      title: updateEntrySchema.shape.title.describe("Optional new title (keeps existing title if omitted)"),
       tags: z.array(z.string()).optional().describe("Optional new tags (keeps existing tags if omitted)"),
     },
     async ({ slug, content, title, tags }) => {
@@ -115,13 +122,13 @@ export function createMcpServer(): McpServer {
 - insert_after: insert content after a specific anchor text
 - insert_before: insert content before a specific anchor text`,
     {
-      slug: z.string().describe("The entry slug to patch"),
-      operation: z.enum(["append", "prepend", "replace", "insert_after", "insert_before"])
+      slug: slugSchema.describe("The entry slug to patch"),
+      operation: patchEntrySchema.shape.operation
         .describe("The patch operation to perform"),
-      content: z.string().optional().describe("Content to append/prepend/insert (for append, prepend, insert_after, insert_before)"),
-      search: z.string().optional().describe("Text to find (for replace operation)"),
-      replacement: z.string().optional().describe("Replacement text (for replace operation)"),
-      anchor: z.string().optional().describe("Anchor text to insert before/after (for insert_after, insert_before)"),
+      content: patchEntrySchema.shape.content.describe("Content to append/prepend/insert (for append, prepend, insert_after, insert_before)"),
+      search: patchEntrySchema.shape.search.describe("Text to find (for replace operation)"),
+      replacement: patchEntrySchema.shape.replacement.describe("Replacement text (for replace operation)"),
+      anchor: patchEntrySchema.shape.anchor.describe("Anchor text to insert before/after (for insert_after, insert_before)"),
     },
     async ({ slug, operation, content, search, replacement, anchor }) => {
       try {
@@ -143,7 +150,7 @@ export function createMcpServer(): McpServer {
     "wiki_delete",
     "Permanently delete a wiki entry. This action cannot be undone.",
     {
-      slug: z.string().describe("The entry slug to delete"),
+      slug: slugSchema.describe("The entry slug to delete"),
     },
     async ({ slug }) => {
       try {
@@ -184,6 +191,43 @@ export function createMcpServer(): McpServer {
         content: [{ type: "text", text: `Found ${results.length} entries matching '${query}':\n\n${JSON.stringify(summary, null, 2)}` }],
       };
     }
+  );
+
+  // ── wiki_backlinks ──────────────────────────────────────────────────────────
+  server.tool(
+    "wiki_backlinks",
+    "List entries that link to a specific wiki entry.",
+    {
+      slug: slugSchema.describe("The entry slug to inspect"),
+    },
+    async ({ slug }) => {
+      const backlinks = getBacklinks(slug);
+      return {
+        content: [{ type: "text", text: JSON.stringify(backlinks, null, 2) }],
+      };
+    }
+  );
+
+  // ── wiki_graph ──────────────────────────────────────────────────────────────
+  server.tool(
+    "wiki_graph",
+    "Return graph nodes and links, including missing linked pages.",
+    {},
+    async () => ({
+      content: [{ type: "text", text: JSON.stringify(getGraphData(), null, 2) }],
+    })
+  );
+
+  // ── wiki_history ────────────────────────────────────────────────────────────
+  server.tool(
+    "wiki_history",
+    "List saved history snapshots for an entry. Snapshots are created before updates, patches, and deletes.",
+    {
+      slug: slugSchema.describe("The entry slug to inspect"),
+    },
+    async ({ slug }) => ({
+      content: [{ type: "text", text: JSON.stringify(listHistory(slug), null, 2) }],
+    })
   );
 
   return server;

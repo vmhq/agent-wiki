@@ -9,6 +9,7 @@ FROM --platform=$BUILDPLATFORM base AS deps
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/web/package.json ./apps/web/
+COPY packages/wiki/package.json ./packages/wiki/
 RUN pnpm install --frozen-lockfile --filter web...
 
 # ── Builder ───────────────────────────────────────────────────────────────────
@@ -16,12 +17,14 @@ FROM --platform=$BUILDPLATFORM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/wiki ./packages/wiki
 COPY apps/web ./apps/web
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+RUN pnpm --filter @agent-wiki/wiki build
 WORKDIR /app/apps/web
 RUN pnpm build
 

@@ -3,10 +3,11 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "concurrently \"pnpm --filter web dev\" \"pnpm --filter mcp dev\"",
-    "build": "pnpm --filter web build && pnpm --filter mcp build",
+    "dev": "pnpm --filter @agent-wiki/wiki build && concurrently \"pnpm --filter web dev\" \"pnpm --filter mcp dev\"",
+    "build": "pnpm --filter @agent-wiki/wiki build && pnpm --filter web build && pnpm --filter mcp build",
     "start": "concurrently \"pnpm --filter web start\" \"pnpm --filter mcp start\"",
-    "lint": "pnpm -r lint"
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter @agent-wiki/wiki test"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

@@ -67,6 +67,9 @@ app.get("/", (_req, res) => {
       "wiki_patch",
       "wiki_delete",
       "wiki_search",
+      "wiki_backlinks",
+      "wiki_graph",
+      "wiki_history",
     ],
     auth: {
       type: "oauth2 or api_key",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Search, GitGraph, Terminal } from "lucide-react";
+import { BookOpen, Search, GitGraph, Terminal, SquarePen } from "lucide-react";
 import clsx from "clsx";
 
 const MCP_PORT = process.env.NEXT_PUBLIC_MCP_PORT ?? "3001";
@@ -11,6 +11,7 @@ const links = [
   { href: "/", label: "Wiki", icon: BookOpen },
   { href: "/search", label: "Search", icon: Search },
   { href: "/graph", label: "Graph", icon: GitGraph },
+  { href: "/edit", label: "New", icon: SquarePen },
 ];
 
 export function Navbar() {

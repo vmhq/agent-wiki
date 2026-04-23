@@ -4,12 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "pnpm --filter @agent-wiki/wiki build",
     "dev": "tsx watch src/index.ts",
+    "prebuild": "pnpm --filter @agent-wiki/wiki build",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@agent-wiki/wiki": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.11.0",
     "express": "^4.21.2",
     "cors": "^2.8.5",
