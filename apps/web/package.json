@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "pnpm --filter @agent-wiki/wiki build",
-    "dev": "next dev --port 3000",
-    "prebuild": "pnpm --filter @agent-wiki/wiki build",
-    "build": "next build",
-    "start": "next start --port 3000",
+    "predev": "bun run --cwd ../../packages/wiki build",
+    "dev": "bun --bun next dev --port 3000",
+    "prebuild": "bun run --cwd ../../packages/wiki build",
+    "build": "bun --bun next build",
+    "start": "bun --bun next start --port 3000",
+    "typecheck": "tsc --noEmit",
     "lint": "next lint"
   },
   "dependencies": {
@@ -19,6 +20,7 @@
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
     "rehype-highlight": "^7.0.0",
+    "highlight.js": "^11.11.1",
     "rehype-slug": "^6.0.0",
     "rehype-autolink-headings": "^7.1.0",
     "react-force-graph-2d": "^1.27.1",

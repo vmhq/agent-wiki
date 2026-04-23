@@ -2,7 +2,7 @@
 
 ## Project overview
 
-pnpm monorepo with two apps that share a `wiki/` directory of Markdown files:
+Bun monorepo with two apps that share a `wiki/` directory of Markdown files:
 
 - `apps/web` — Next.js 15 web app (port 3000)
 - `apps/mcp` — Express + MCP SDK server (port 3001)
@@ -13,27 +13,27 @@ Wiki files live at the repo root under `wiki/` (locally) or `/wiki` (Docker volu
 
 ```bash
 # Install all dependencies
-pnpm install
+bun install
 
 # Run both apps in parallel (dev mode)
-pnpm dev
+bun run dev
 
 # Run only the web app
-pnpm --filter web dev
+bun run --filter web dev
 
 # Run only the MCP server
-pnpm --filter mcp dev
+bun run --filter mcp dev
 
 # Type-check both apps
-pnpm --filter web exec tsc --noEmit
-pnpm --filter mcp exec tsc --noEmit
+bun run --filter web typecheck
+bun run --filter mcp typecheck
 
 # Build everything
-pnpm build
+bun run build
 
 # Build a single app
-pnpm --filter web build
-pnpm --filter mcp build
+bun run --filter web build
+bun run --filter mcp build
 ```
 
 ## Architecture

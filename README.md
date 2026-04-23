@@ -10,7 +10,7 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 | **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
 | **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
 
-**Stack:** Next.js 15 · TypeScript · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express · OAuth 2.0 + PKCE · pnpm workspaces · Docker · GitHub Actions
+**Stack:** Next.js 15 · TypeScript · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions
 
 ---
 
@@ -20,14 +20,14 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 
 ```bash
 # 1. Install dependencies
-pnpm install
+bun install
 
 # 2. Configure environment
 cp .env.example .env
 # Edit .env — at minimum change WIKI_API_KEY and WIKI_OAUTH_PASSWORD
 
 # 3. Start both services in parallel
-pnpm dev
+bun run dev
 ```
 
 - Web app → http://localhost:3000

@@ -1,13 +1,18 @@
 {
   "name": "agent-wiki",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
+  "packageManager": "bun@1.3.12",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "pnpm --filter @agent-wiki/wiki build && concurrently \"pnpm --filter web dev\" \"pnpm --filter mcp dev\"",
-    "build": "pnpm --filter @agent-wiki/wiki build && pnpm --filter web build && pnpm --filter mcp build",
-    "start": "concurrently \"pnpm --filter web start\" \"pnpm --filter mcp start\"",
-    "lint": "pnpm -r lint",
-    "test": "pnpm --filter @agent-wiki/wiki test"
+    "dev": "bun run --filter @agent-wiki/wiki build && concurrently \"bun run --filter web dev\" \"bun run --filter mcp dev\"",
+    "build": "bun run --filter @agent-wiki/wiki build && bun run --filter web build && bun run --filter mcp build",
+    "start": "concurrently \"bun run --filter web start\" \"bun run --filter mcp start\"",
+    "lint": "bun run --filter '*' lint",
+    "typecheck": "bun run --filter web typecheck && bun run --filter mcp typecheck",
+    "test": "bun run --filter @agent-wiki/wiki test"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "pnpm --filter @agent-wiki/wiki build",
-    "dev": "tsx watch src/index.ts",
-    "prebuild": "pnpm --filter @agent-wiki/wiki build",
+    "predev": "bun run --cwd ../../packages/wiki build",
+    "dev": "bun --watch src/index.ts",
+    "prebuild": "bun run --cwd ../../packages/wiki build",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "bun dist/index.js",
+    "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -26,7 +27,6 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22",
     "@types/uuid": "^10.0.0",
-    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

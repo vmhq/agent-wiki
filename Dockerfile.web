@@ -1,35 +1,35 @@
 # syntax=docker/dockerfile:1
 # Build stages run on the host platform (avoids QEMU SIGILL with SWC/Rust).
 # The runner stage uses the target platform; Next.js output is plain JS.
-FROM --platform=$BUILDPLATFORM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+FROM --platform=$BUILDPLATFORM oven/bun:1.3.12-alpine AS base
 
 # ── Dependencies ──────────────────────────────────────────────────────────────
 FROM --platform=$BUILDPLATFORM base AS deps
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json bun.lock ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/wiki/package.json ./packages/wiki/
-RUN pnpm install --frozen-lockfile --filter web...
+RUN bun install --frozen-lockfile
 
 # ── Builder ───────────────────────────────────────────────────────────────────
 FROM --platform=$BUILDPLATFORM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY --from=deps /app/packages/wiki/node_modules ./packages/wiki/node_modules
+COPY package.json bun.lock ./
 COPY packages/wiki ./packages/wiki
 COPY apps/web ./apps/web
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN pnpm --filter @agent-wiki/wiki build
+RUN bun run --filter @agent-wiki/wiki build
 WORKDIR /app/apps/web
-RUN pnpm build
+RUN bun run build
 
 # ── Runner ────────────────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM oven/bun:1.3.12-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -58,4 +58,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 3000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["node", "apps/web/server.js"]
+CMD ["bun", "apps/web/server.js"]
