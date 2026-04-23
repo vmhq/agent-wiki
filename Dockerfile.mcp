@@ -42,9 +42,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Runtime files
 COPY --from=builder --chown=mcpuser:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=mcpuser:nodejs /app/packages/wiki ./packages/wiki
+COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/node_modules ./apps/mcp/node_modules
 # compiled output and package.json (needed for "type": "module")
-COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/dist ./dist
-COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/package.json ./package.json
+COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/dist ./apps/mcp/dist
+COPY --from=builder --chown=mcpuser:nodejs /app/apps/mcp/package.json ./apps/mcp/package.json
 
 # Entrypoint: runs as root, fixes /wiki permissions, then drops to mcpuser
 COPY docker/entrypoint-mcp.sh /entrypoint.sh
@@ -53,4 +54,4 @@ RUN chmod +x /entrypoint.sh
 EXPOSE 3001
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bun", "dist/index.js"]
+CMD ["bun", "apps/mcp/dist/index.js"]
