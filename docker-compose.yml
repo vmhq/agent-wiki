@@ -58,6 +58,7 @@ services:
     environment:
       NODE_ENV: production
       WIKI_DIR: /wiki
+      WIKI_API_KEY: ${WIKI_API_KEY:?WIKI_API_KEY is required — set it in .env}
       MCP_BASE_URL: ${MCP_BASE_URL:-http://localhost:3001}
       NEXT_TELEMETRY_DISABLED: "1"
     volumes:
