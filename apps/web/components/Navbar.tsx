@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Search, GitGraph, Terminal, SquarePen, Wrench } from "lucide-react";
 import clsx from "clsx";
+import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
 const MCP_PORT = process.env.NEXT_PUBLIC_MCP_PORT ?? "3001";
 
@@ -19,12 +20,12 @@ export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode })
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-[var(--color-wiki-border)] bg-[var(--color-wiki-bg)]/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-[var(--color-wiki-border)] bg-[color-mix(in_srgb,var(--color-wiki-bg)_88%,transparent)] backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 font-bold text-white hover:text-[var(--color-wiki-accent)] transition-colors">
-              <span className="text-lg leading-none">📚</span>
+            <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--color-wiki-text)] transition-colors hover:text-black">
+              <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--color-wiki-text)] text-[11px] font-semibold text-[var(--color-wiki-bg)]">W</span>
               Agent Wiki
             </Link>
 
@@ -34,10 +35,10 @@ export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode })
                   key={href}
                   href={href}
                   className={clsx(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                     pathname === href
-                      ? "bg-[var(--color-wiki-surface)] text-white"
-                      : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] hover:bg-[var(--color-wiki-surface)]"
+                      ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]"
+                      : "text-[var(--color-wiki-muted)] hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"
                   )}
                 >
                   <Icon size={15} />
@@ -49,11 +50,12 @@ export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode })
 
           <div className="flex items-center gap-3">
             {commandPalette}
+            <ThemeSwitcher />
             <a
               href={`http://localhost:${MCP_PORT}/health`}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] hover:bg-[var(--color-wiki-surface)] transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-wiki-muted)] transition-colors hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"
             >
               <Terminal size={13} />
               MCP

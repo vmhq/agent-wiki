@@ -23,7 +23,7 @@ export function AppSidebar() {
               <Link
                 key={entry.slug}
                 href={`/wiki/${entry.slug}`}
-                className="block rounded-lg px-2 py-2 hover:bg-[var(--color-wiki-surface)]"
+                className="block rounded-lg px-2 py-2 hover:bg-[var(--color-wiki-subtle)]"
               >
                 <p className="truncate text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                 <p className="mt-0.5 text-[11px] text-[var(--color-wiki-muted)]">
@@ -57,13 +57,13 @@ export function AppSidebar() {
         <section>
           <Link
             href="/maintenance"
-            className="flex items-center justify-between gap-3 rounded-lg border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] px-3 py-2.5 hover:border-[var(--color-wiki-accent)]/60"
+            className="wiki-card wiki-card-hover flex items-center justify-between gap-3 rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2.5"
           >
-            <span className="flex items-center gap-2 text-sm font-medium text-white">
+            <span className="flex items-center gap-2 text-sm font-medium text-[var(--color-wiki-text)]">
               <AlertTriangle size={15} />
               Maintenance
             </span>
-            <span className="rounded-full bg-[#312f1d] px-2 py-0.5 text-[11px] text-[#fbbf24]">{issueCount}</span>
+            <span className="rounded-full bg-[var(--color-wiki-tag)] px-2 py-0.5 text-[11px] text-[var(--color-wiki-tag-text)]">{issueCount}</span>
           </Link>
         </section>
       </div>

@@ -28,7 +28,7 @@ export default async function EditPage({ params }: Props) {
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">{entry ? "Edit Entry" : "New Entry"}</h1>
+        <h1 className="text-3xl font-semibold text-[var(--color-wiki-text)] mb-2">{entry ? "Edit Entry" : "New Entry"}</h1>
       </div>
 
       <WikiEditor entry={entry ?? undefined} initialSlug={slug ?? ""} existingSlugs={existingSlugs} />

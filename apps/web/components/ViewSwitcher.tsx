@@ -15,10 +15,10 @@ function WikiListItem({ entry }: { entry: WikiMeta }) {
   return (
     <Link
       href={`/wiki/${entry.slug}`}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] hover:border-[var(--color-wiki-accent)]/50 hover:bg-[var(--color-wiki-surface)]/80 transition-all duration-200 group"
+      className="wiki-card wiki-card-hover group flex items-center gap-4 rounded-lg bg-[var(--color-wiki-surface)] px-4 py-3"
     >
       <div className="flex-1 min-w-0">
-        <h2 className="text-sm font-semibold text-white group-hover:text-[var(--color-wiki-accent)] transition-colors truncate">
+        <h2 className="truncate text-sm font-semibold text-[var(--color-wiki-text)] transition-colors">
           {entry.title}
         </h2>
         {entry.excerpt && (
@@ -59,13 +59,13 @@ export function ViewSwitcher({ entries }: Props) {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <div className="flex gap-0.5 p-1 rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)]">
+        <div className="wiki-ring flex gap-0.5 rounded-lg bg-[var(--color-wiki-surface)] p-1">
           <button
             onClick={() => setView("grid")}
             className={`p-1.5 rounded-md transition-colors ${
               view === "grid"
-                ? "bg-[var(--color-wiki-accent)] text-white"
-                : "text-[var(--color-wiki-muted)] hover:text-white"
+                ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]"
+                : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"
             }`}
             title="Grid view"
           >
@@ -75,8 +75,8 @@ export function ViewSwitcher({ entries }: Props) {
             onClick={() => setView("list")}
             className={`p-1.5 rounded-md transition-colors ${
               view === "list"
-                ? "bg-[var(--color-wiki-accent)] text-white"
-                : "text-[var(--color-wiki-muted)] hover:text-white"
+                ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]"
+                : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"
             }`}
             title="List view"
           >

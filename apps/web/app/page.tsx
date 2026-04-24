@@ -14,8 +14,9 @@ export default function IndexPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Agent Wiki</h1>
+      <div className="mb-8 border-b border-[var(--color-wiki-border)] pb-8">
+        <p className="mb-3 font-mono text-xs font-medium uppercase text-[var(--color-wiki-muted)]">Knowledge base</p>
+        <h1 className="mb-3 text-5xl font-semibold leading-none text-[var(--color-wiki-text)]">Agent Wiki</h1>
         <p className="text-[var(--color-wiki-muted)] text-sm">
           {entries.length} {entries.length === 1 ? "entry" : "entries"} · AI-maintained knowledge base
         </p>

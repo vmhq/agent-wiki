@@ -49,19 +49,19 @@ export function CommandPalette({ entries }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden md:flex h-8 min-w-44 items-center justify-between gap-3 rounded-lg border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] px-2.5 text-xs text-[var(--color-wiki-muted)] hover:text-white"
+        className="wiki-ring hidden h-8 min-w-44 items-center justify-between gap-3 rounded-md bg-[var(--color-wiki-surface)] px-2.5 text-xs text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] md:flex"
       >
         <span className="flex items-center gap-2">
           <Search size={13} />
           Go to...
         </span>
-        <kbd className="rounded border border-[var(--color-wiki-border)] px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        <kbd className="wiki-ring rounded px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
 
       {open && (
         <div className="fixed inset-0 z-[80] bg-black/55 px-4 pt-24 backdrop-blur-sm" onMouseDown={() => setOpen(false)}>
           <div
-            className="mx-auto max-w-2xl overflow-hidden rounded-xl border border-[var(--color-wiki-border)] bg-[var(--color-wiki-bg)] shadow-2xl"
+            className="wiki-card mx-auto max-w-2xl overflow-hidden rounded-xl bg-[var(--color-wiki-bg)]"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <div className="flex items-center gap-3 border-b border-[var(--color-wiki-border)] px-4 py-3">
@@ -70,9 +70,9 @@ export function CommandPalette({ entries }: Props) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 autoFocus
-                className="h-8 flex-1 bg-transparent text-sm text-white outline-none"
+                className="h-8 flex-1 bg-transparent text-sm text-[var(--color-wiki-text)] outline-none"
               />
-              <button type="button" onClick={() => setOpen(false)} className="text-[var(--color-wiki-muted)] hover:text-white">
+              <button type="button" onClick={() => setOpen(false)} className="text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]">
                 <X size={17} />
               </button>
             </div>
@@ -85,7 +85,7 @@ export function CommandPalette({ entries }: Props) {
                       key={href}
                       href={href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-wiki-text)] hover:bg-[var(--color-wiki-surface)]"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--color-wiki-text)] hover:bg-[var(--color-wiki-subtle)]"
                     >
                       <Icon size={15} className="text-[var(--color-wiki-muted)]" />
                       {label}
@@ -100,9 +100,9 @@ export function CommandPalette({ entries }: Props) {
                     key={entry.slug}
                     href={`/wiki/${entry.slug}`}
                     onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-2 hover:bg-[var(--color-wiki-surface)]"
+                    className="block rounded-lg px-3 py-2 hover:bg-[var(--color-wiki-subtle)]"
                   >
-                    <p className="text-sm font-medium text-white">{entry.title}</p>
+                    <p className="text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                     <p className="text-xs text-[var(--color-wiki-muted)]">/{entry.slug}</p>
                   </Link>
                 ))}

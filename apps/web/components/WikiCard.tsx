@@ -11,9 +11,9 @@ export function WikiCard({ entry }: Props) {
   return (
     <Link
       href={`/wiki/${entry.slug}`}
-      className="group block p-5 rounded-xl border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] hover:border-[var(--color-wiki-accent)]/50 hover:bg-[var(--color-wiki-surface)]/80 transition-all duration-200"
+      className="wiki-card wiki-card-hover group block rounded-lg bg-[var(--color-wiki-surface)] p-5"
     >
-      <h2 className="text-base font-semibold text-white group-hover:text-[var(--color-wiki-accent)] transition-colors mb-2 line-clamp-2">
+      <h2 className="mb-2 line-clamp-2 text-base font-semibold text-[var(--color-wiki-text)] transition-colors">
         {entry.title}
       </h2>
 

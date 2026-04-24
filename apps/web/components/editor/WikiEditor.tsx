@@ -109,7 +109,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
               setTitle(event.target.value);
               if (!isExisting) setSlug(slugify(event.target.value));
             }}
-            className="w-full rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-wiki-accent)]"
+            className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-sm text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)]"
           />
         </label>
         <label className="block">
@@ -118,7 +118,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
             disabled={isExisting}
-            className="w-full rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-wiki-accent)] disabled:opacity-70"
+            className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-sm text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)] disabled:opacity-70"
           />
         </label>
       </div>
@@ -130,7 +130,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             value={tags}
             onChange={(event) => setTags(event.target.value)}
             placeholder="mcp, notes, research"
-            className="w-full rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)] px-3 py-2 text-sm text-white outline-none focus:border-[var(--color-wiki-accent)]"
+            className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-sm text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)]"
           />
         </label>
         <label className="block">
@@ -141,19 +141,19 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
               value={apiKey}
               onChange={(event) => setApiKey(event.target.value)}
               type="password"
-              className="w-full rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)] pl-8 pr-3 py-2 text-sm text-white outline-none focus:border-[var(--color-wiki-accent)]"
+              className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] py-2 pl-8 pr-3 text-sm text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)]"
             />
           </div>
         </label>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-0.5 p-1 rounded-lg bg-[var(--color-wiki-surface)] border border-[var(--color-wiki-border)]">
+        <div className="wiki-ring flex gap-0.5 rounded-lg bg-[var(--color-wiki-surface)] p-1">
           <button
             type="button"
             onClick={() => setMode("edit")}
             title="Edit"
-            className={`p-1.5 rounded-md transition-colors ${mode === "edit" ? "bg-[var(--color-wiki-accent)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+            className={`p-1.5 rounded-md transition-colors ${mode === "edit" ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]" : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"}`}
           >
             <FileText size={15} />
           </button>
@@ -161,7 +161,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             type="button"
             onClick={() => setMode("split")}
             title="Split"
-            className={`p-1.5 rounded-md transition-colors ${mode === "split" ? "bg-[var(--color-wiki-accent)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+            className={`p-1.5 rounded-md transition-colors ${mode === "split" ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]" : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"}`}
           >
             <Columns2 size={15} />
           </button>
@@ -169,7 +169,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             type="button"
             onClick={() => setMode("preview")}
             title="Preview"
-            className={`p-1.5 rounded-md transition-colors ${mode === "preview" ? "bg-[var(--color-wiki-accent)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+            className={`p-1.5 rounded-md transition-colors ${mode === "preview" ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]" : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"}`}
           >
             <Eye size={15} />
           </button>
@@ -191,7 +191,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             type="button"
             onClick={save}
             disabled={!canSave || isSaving}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--color-wiki-accent-hover)] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-text)] px-3 py-2 text-sm font-semibold text-[var(--color-wiki-bg)] hover:bg-[var(--color-wiki-accent-hover)] disabled:opacity-50"
           >
             <Save size={14} />
             {isSaving ? "Saving" : "Save"}
@@ -208,10 +208,10 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
           value={content}
           onChange={(event) => setContent(event.target.value)}
           spellCheck={false}
-          className="min-h-[560px] w-full resize-y rounded-lg bg-[#0a0c12] border border-[var(--color-wiki-border)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:border-[var(--color-wiki-accent)]"
+          className="wiki-card min-h-[560px] w-full resize-y rounded-lg bg-[var(--color-wiki-subtle)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)]"
         />
       ) : mode === "preview" ? (
-        <article className="prose min-h-[560px] rounded-lg border border-[var(--color-wiki-border)] bg-[#0a0c12] px-5 py-4">
+        <article className="prose wiki-card min-h-[560px] rounded-lg bg-[var(--color-wiki-subtle)] px-5 py-4">
           <MarkdownRenderer content={content} existingSlugs={existingSlugs} />
         </article>
       ) : (
@@ -220,9 +220,9 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
             value={content}
             onChange={(event) => setContent(event.target.value)}
             spellCheck={false}
-            className="min-h-[620px] w-full resize-y rounded-lg bg-[#0a0c12] border border-[var(--color-wiki-border)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:border-[var(--color-wiki-accent)]"
+            className="wiki-card min-h-[620px] w-full resize-y rounded-lg bg-[var(--color-wiki-subtle)] px-4 py-3 font-mono text-sm leading-6 text-[var(--color-wiki-text)] outline-none focus:shadow-[var(--shadow-wiki-focus)]"
           />
-          <article className="prose min-h-[620px] overflow-y-auto rounded-lg border border-[var(--color-wiki-border)] bg-[#0a0c12] px-5 py-4">
+          <article className="prose wiki-card min-h-[620px] overflow-y-auto rounded-lg bg-[var(--color-wiki-subtle)] px-5 py-4">
             <MarkdownRenderer content={content} existingSlugs={existingSlugs} />
           </article>
         </div>

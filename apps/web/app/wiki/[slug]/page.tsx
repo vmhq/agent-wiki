@@ -32,7 +32,7 @@ export default async function WikiPage({ params }: Props) {
           </Link>
           <Link
             href={`/edit/${slug}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-wiki-border)] px-3 py-1.5 text-sm text-[var(--color-wiki-muted)] hover:border-[var(--color-wiki-accent)]/60 hover:text-white transition-colors"
+            className="wiki-ring inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-[var(--color-wiki-muted)] transition-colors hover:text-[var(--color-wiki-text)]"
           >
             <Edit size={14} />
             Edit
@@ -42,7 +42,7 @@ export default async function WikiPage({ params }: Props) {
 
       {/* Header */}
       <div className="mb-8 pb-6 border-b border-[var(--color-wiki-border)]">
-        <h1 className="text-4xl font-bold text-white mb-4">{entry.title}</h1>
+        <h1 className="text-4xl font-semibold text-[var(--color-wiki-text)] mb-4">{entry.title}</h1>
 
         <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-wiki-muted)]">
           <span className="inline-flex items-center gap-1.5">
@@ -76,15 +76,15 @@ export default async function WikiPage({ params }: Props) {
 
       {backlinks.length > 0 && (
         <section className="mt-12 pt-6 border-t border-[var(--color-wiki-border)]">
-          <h2 className="text-sm font-semibold text-white mb-3">Backlinks</h2>
+          <h2 className="text-sm font-semibold text-[var(--color-wiki-text)] mb-3">Backlinks</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {backlinks.map((link) => (
               <Link
                 key={link.slug}
                 href={`/wiki/${link.slug}`}
-                className="block rounded-lg border border-[var(--color-wiki-border)] bg-[var(--color-wiki-surface)] px-4 py-3 hover:border-[var(--color-wiki-accent)]/60 transition-colors"
+                className="wiki-card wiki-card-hover block rounded-lg bg-[var(--color-wiki-surface)] px-4 py-3"
               >
-                <p className="text-sm font-medium text-white">{link.title}</p>
+                <p className="text-sm font-medium text-[var(--color-wiki-text)]">{link.title}</p>
                 {link.excerpt && (
                   <p className="mt-1 text-xs leading-5 text-[var(--color-wiki-muted)] line-clamp-2">{link.excerpt}</p>
                 )}

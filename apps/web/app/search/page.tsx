@@ -17,7 +17,7 @@ export default async function SearchPage({ searchParams }: Props) {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-4">
+        <h1 className="text-3xl font-semibold text-[var(--color-wiki-text)] mb-4">
           {query ? `Search results for "${query}"` : "Browse all entries"}
         </h1>
         <SearchBar defaultValue={query} />

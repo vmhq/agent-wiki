@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ExternalLink, Maximize2, Pencil, Search, X, ZoomIn, ZoomOut } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ForceGraph2D = dynamic<any>(() => import("react-force-graph-2d"), { ssr: false });
@@ -48,6 +49,7 @@ function getNodeColor(node: GraphNode, tagColorMap: Map<string, string>): string
 }
 
 export function GraphView({ data }: Props) {
+  const { resolvedTheme } = useTheme();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const graphRef = useRef<any>(null);
   const hoveredRef = useRef<GraphNode | null>(null);
@@ -190,36 +192,38 @@ export function GraphView({ data }: Props) {
       const tx = nx;
       const ty = ny + r + 3;
 
-      ctx.fillStyle = "#0a0c12b0";
+      ctx.fillStyle = resolvedTheme === "dark" ? "#0a0a0ab0" : "#ffffffd9";
       ctx.beginPath();
       const pad = 2.5;
       ctx.roundRect(tx - tw / 2 - pad, ty - 1, tw + pad * 2, fontSize + 2, 2);
       ctx.fill();
 
-      ctx.fillStyle = isHovered ? "#ffffff" : "#b8bbd4";
+      ctx.fillStyle = isHovered
+        ? resolvedTheme === "dark" ? "#ffffff" : "#171717"
+        : resolvedTheme === "dark" ? "#b8bbd4" : "#666666";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillText(label, tx, ty);
     },
-    [tagColorMap, connectionCount]
+    [tagColorMap, connectionCount, resolvedTheme]
   );
 
   return (
-    <div className="relative rounded-2xl border border-[var(--color-wiki-border)] overflow-hidden bg-[#0a0c12] graph-container">
+    <div className="wiki-card graph-container relative overflow-hidden rounded-xl bg-[var(--color-wiki-subtle)]">
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         <div className="relative">
           <Search size={13} className="absolute left-2.5 top-2.5 text-[var(--color-wiki-muted)]" />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="h-8 w-44 rounded-lg bg-[var(--color-wiki-surface)]/90 border border-[var(--color-wiki-border)] pl-7 pr-7 text-xs text-white outline-none focus:border-[var(--color-wiki-accent)] backdrop-blur-sm"
+            className="wiki-ring h-8 w-44 rounded-lg bg-[var(--color-wiki-surface)]/90 pl-7 pr-7 text-xs text-[var(--color-wiki-text)] outline-none backdrop-blur-sm focus:shadow-[var(--shadow-wiki-focus)]"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
               title="Clear"
-              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md text-[var(--color-wiki-muted)] hover:text-white"
+              className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-md text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"
             >
               <X size={12} />
             </button>
@@ -235,7 +239,7 @@ export function GraphView({ data }: Props) {
               key={title}
               onClick={action}
               title={title}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--color-wiki-surface)]/90 border border-[var(--color-wiki-border)] text-[var(--color-wiki-muted)] hover:text-white hover:border-[var(--color-wiki-accent)]/60 transition-colors backdrop-blur-sm"
+              className="wiki-ring flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-wiki-surface)]/90 text-[var(--color-wiki-muted)] transition-colors hover:text-[var(--color-wiki-text)] backdrop-blur-sm"
             >
               {icon}
             </button>
@@ -254,12 +258,12 @@ export function GraphView({ data }: Props) {
           nodeLabel={() => ""}
           nodeCanvasObject={paintNode as (node: object, ctx: CanvasRenderingContext2D, globalScale: number) => void}
           nodeCanvasObjectMode={() => "replace"}
-          linkColor={(link: object) => ((link as GraphLink).missing ? "#8b8fa855" : "#2e3250")}
+          linkColor={(link: object) => ((link as GraphLink).missing ? "#8b8fa855" : resolvedTheme === "dark" ? "#2e3250" : "#d4d4d4")}
           linkWidth={(link: object) => ((link as GraphLink).missing ? 0.8 : 1)}
           linkDirectionalArrowLength={3.5}
           linkDirectionalArrowRelPos={1}
           linkDirectionalParticles={0}
-          backgroundColor="#0a0c12"
+          backgroundColor={resolvedTheme === "dark" ? "#0a0a0a" : "#fafafa"}
           width={undefined}
           height={700}
           onNodeClick={handleClick as (node: object) => void}
@@ -273,13 +277,13 @@ export function GraphView({ data }: Props) {
       )}
 
       {(allTags.length > 0 || data.nodes.some((node) => node.missing)) && (
-        <div className="absolute top-4 right-4 z-10 bg-[var(--color-wiki-bg)]/90 backdrop-blur-sm border border-[var(--color-wiki-border)] rounded-xl px-3 py-2.5 max-h-72 overflow-y-auto">
+        <div className="wiki-card absolute top-4 right-4 z-10 max-h-72 overflow-y-auto rounded-xl bg-[var(--color-wiki-bg)]/90 px-3 py-2.5 backdrop-blur-sm">
           <p className="text-[11px] font-semibold text-[var(--color-wiki-muted)] uppercase tracking-wider mb-2">Tags</p>
           <div className="flex flex-col gap-1">
             <button
               type="button"
               onClick={() => setSelectedTag("all")}
-              className={`flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs ${selectedTag === "all" ? "bg-[var(--color-wiki-surface)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+              className={`flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs ${selectedTag === "all" ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]" : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"}`}
             >
               <span className="w-2.5 h-2.5 rounded-full bg-[#4a4e6a]" />
               All
@@ -289,7 +293,7 @@ export function GraphView({ data }: Props) {
                 key={tag}
                 type="button"
                 onClick={() => setSelectedTag(tag)}
-                className={`flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs ${selectedTag === tag ? "bg-[var(--color-wiki-surface)] text-white" : "text-[var(--color-wiki-muted)] hover:text-white"}`}
+                className={`flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs ${selectedTag === tag ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]" : "text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"}`}
               >
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tagColorMap.get(tag) }} />
                 <span className="truncate max-w-32">{tag}</span>
@@ -306,13 +310,13 @@ export function GraphView({ data }: Props) {
       )}
 
       {selectedNode && (
-        <div className="absolute bottom-4 right-4 top-4 z-20 w-[min(360px,calc(100%-2rem))] overflow-y-auto rounded-xl border border-[var(--color-wiki-border)] bg-[var(--color-wiki-bg)]/95 p-4 shadow-2xl backdrop-blur-sm">
+        <div className="wiki-card absolute bottom-4 right-4 top-4 z-20 w-[min(360px,calc(100%-2rem))] overflow-y-auto rounded-xl bg-[var(--color-wiki-bg)]/95 p-4 backdrop-blur-sm">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold text-white">{selectedNode.name}</p>
+              <p className="truncate text-base font-semibold text-[var(--color-wiki-text)]">{selectedNode.name}</p>
               <p className="mt-1 text-xs text-[var(--color-wiki-muted)]">/{selectedNode.id}</p>
             </div>
-            <button type="button" onClick={() => setSelectedNode(null)} className="text-[var(--color-wiki-muted)] hover:text-white">
+            <button type="button" onClick={() => setSelectedNode(null)} className="text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]">
               <X size={17} />
             </button>
           </div>
@@ -321,7 +325,7 @@ export function GraphView({ data }: Props) {
             {selectedNode.missing ? (
               <Link
                 href={`/edit/${selectedNode.id}`}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--color-wiki-accent-hover)]"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-text)] px-3 py-2 text-sm font-semibold text-[var(--color-wiki-bg)] hover:bg-[var(--color-wiki-accent-hover)]"
               >
                 <Pencil size={14} />
                 Create
@@ -330,14 +334,14 @@ export function GraphView({ data }: Props) {
               <>
                 <Link
                   href={`/wiki/${selectedNode.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-accent)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--color-wiki-accent-hover)]"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-wiki-text)] px-3 py-2 text-sm font-semibold text-[var(--color-wiki-bg)] hover:bg-[var(--color-wiki-accent-hover)]"
                 >
                   <ExternalLink size={14} />
                   Open
                 </Link>
                 <Link
                   href={`/edit/${selectedNode.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-wiki-border)] px-3 py-2 text-sm text-[var(--color-wiki-muted)] hover:text-white"
+                  className="wiki-ring inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"
                 >
                   <Pencil size={14} />
                   Edit
@@ -369,7 +373,7 @@ export function GraphView({ data }: Props) {
                   key={node.id}
                   type="button"
                   onClick={() => setSelectedNode(node)}
-                  className="block w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-left text-sm text-white hover:border-[var(--color-wiki-accent)]"
+                  className="block w-full rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 text-left text-sm text-[var(--color-wiki-text)]"
                 >
                   {node.name}
                 </button>
@@ -386,7 +390,7 @@ export function GraphView({ data }: Props) {
                   key={node.id}
                   type="button"
                   onClick={() => setSelectedNode(node)}
-                  className="block w-full rounded-lg bg-[var(--color-wiki-surface)] px-3 py-2 text-left text-sm text-white"
+                  className="block w-full rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 text-left text-sm text-[var(--color-wiki-text)]"
                 >
                   {node.name}
                 </button>
