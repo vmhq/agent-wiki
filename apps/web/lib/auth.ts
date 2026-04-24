@@ -4,8 +4,6 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-const API_KEY = process.env.WIKI_API_KEY ?? "";
-
 /**
  * Returns null if the request is authorized, or a 401/403 NextResponse if not.
  * Usage:
@@ -13,8 +11,10 @@ const API_KEY = process.env.WIKI_API_KEY ?? "";
  *   if (authError) return authError;
  */
 export function requireWriteAuth(req: NextRequest): NextResponse | null {
+  const apiKey = process.env.WIKI_API_KEY ?? "";
+
   // Local development can run without an API key. Production never should.
-  if (!API_KEY) {
+  if (!apiKey) {
     if (process.env.NODE_ENV === "production") {
       return NextResponse.json(
         { error: "server_misconfigured", error_description: "WIKI_API_KEY is required for write operations" },
@@ -32,7 +32,7 @@ export function requireWriteAuth(req: NextRequest): NextResponse | null {
     );
   }
   const token = authHeader.slice(7);
-  if (token !== API_KEY) {
+  if (token !== apiKey) {
     return NextResponse.json(
       { error: "forbidden", error_description: "Invalid API key" },
       { status: 403 }
