@@ -16,16 +16,23 @@ const links = [
   { href: "/edit", label: "New", icon: SquarePen },
 ];
 
-export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode }) {
+export function Navbar({
+  commandPalette,
+  mcpBaseUrl,
+}: {
+  commandPalette?: React.ReactNode;
+  mcpBaseUrl?: string;
+}) {
   const pathname = usePathname();
+  const mcpHref = mcpBaseUrl ?? `http://localhost:${MCP_PORT}`;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-[var(--color-wiki-border)] bg-[color-mix(in_srgb,var(--color-wiki-bg)_88%,transparent)] backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--color-wiki-text)] transition-colors hover:text-black">
-              <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--color-wiki-text)] text-[11px] font-semibold text-[var(--color-wiki-bg)]">W</span>
+            <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--color-wiki-text)] transition-colors hover:opacity-80">
+              <span className="grid h-6 w-6 place-items-center rounded-md bg-[var(--color-wiki-text)] text-[10px] font-semibold text-[var(--color-wiki-bg)]">AW</span>
               Agent Wiki
             </Link>
 
@@ -52,7 +59,7 @@ export function Navbar({ commandPalette }: { commandPalette?: React.ReactNode })
             {commandPalette}
             <ThemeSwitcher />
             <a
-              href={`http://localhost:${MCP_PORT}/health`}
+              href={mcpHref}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-wiki-muted)] transition-colors hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"

@@ -7,7 +7,7 @@ import { ThemeProvider, themeInitScript } from "@/components/theme/ThemeProvider
 import { listEntries } from "@/lib/wiki";
 
 export const metadata: Metadata = {
-  title: "📚 Agent Wiki",
+  title: "Agent Wiki",
   description: "AI-maintained knowledge base — Karpathy LLM Wiki pattern",
   icons: {
     icon: "/favicon.svg",
@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const entries = listEntries();
+  const mcpBaseUrl = process.env.MCP_BASE_URL;
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -26,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen">
         <ThemeProvider>
-          <Navbar commandPalette={<CommandPalette entries={entries} />} />
+          <Navbar commandPalette={<CommandPalette entries={entries} />} mcpBaseUrl={mcpBaseUrl} />
           <div className="flex">
             <AppSidebar />
             <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">
