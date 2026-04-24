@@ -69,6 +69,23 @@ export function Navbar({
             </a>
           </div>
         </div>
+        <div className="-mx-4 flex gap-1 overflow-x-auto border-t border-[var(--color-wiki-border)] px-4 py-2 sm:hidden">
+          {links.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                "flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                pathname === href
+                  ? "bg-[var(--color-wiki-text)] text-[var(--color-wiki-bg)]"
+                  : "text-[var(--color-wiki-muted)] hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"
+              )}
+            >
+              <Icon size={15} />
+              {label}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );

@@ -7,7 +7,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import Link from "next/link";
 import type { Components } from "react-markdown";
-import "highlight.js/styles/github-dark.css";
+import "highlight.js/styles/github.css";
 
 interface Props {
   content: string;
