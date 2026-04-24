@@ -6,8 +6,6 @@ import { BookOpen, Search, GitGraph, Terminal, SquarePen, Wrench } from "lucide-
 import clsx from "clsx";
 import { ThemeSwitcher } from "@/components/theme/ThemeSwitcher";
 
-const MCP_PORT = process.env.NEXT_PUBLIC_MCP_PORT ?? "3001";
-
 const links = [
   { href: "/", label: "Wiki", icon: BookOpen },
   { href: "/search", label: "Search", icon: Search },
@@ -24,7 +22,6 @@ export function Navbar({
   mcpBaseUrl?: string;
 }) {
   const pathname = usePathname();
-  const mcpHref = mcpBaseUrl ?? `http://localhost:${MCP_PORT}`;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-[var(--color-wiki-border)] bg-[color-mix(in_srgb,var(--color-wiki-bg)_88%,transparent)] backdrop-blur-md">
@@ -58,15 +55,17 @@ export function Navbar({
           <div className="flex items-center gap-3">
             {commandPalette}
             <ThemeSwitcher />
-            <a
-              href={mcpHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-wiki-muted)] transition-colors hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"
-            >
-              <Terminal size={13} />
-              MCP
-            </a>
+            {mcpBaseUrl && (
+              <a
+                href={mcpBaseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--color-wiki-muted)] transition-colors hover:bg-[var(--color-wiki-subtle)] hover:text-[var(--color-wiki-text)]"
+              >
+                <Terminal size={13} />
+                MCP
+              </a>
+            )}
           </div>
         </div>
         <div className="-mx-4 flex gap-1 overflow-x-auto border-t border-[var(--color-wiki-border)] px-4 py-2 sm:hidden">

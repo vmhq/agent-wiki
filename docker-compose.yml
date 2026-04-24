@@ -58,6 +58,7 @@ services:
     environment:
       NODE_ENV: production
       WIKI_DIR: /wiki
+      MCP_BASE_URL: ${MCP_BASE_URL:-http://localhost:3001}
       NEXT_TELEMETRY_DISABLED: "1"
     volumes:
       - wiki_data:/wiki
