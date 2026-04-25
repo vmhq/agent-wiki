@@ -1,14 +1,85 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Clock, Tags } from "lucide-react";
-import { getMaintenanceReport, listEntries } from "@/lib/wiki";
+import type { WikiMeta } from "@/lib/wiki";
+
+interface MaintenanceData {
+  missing: unknown[];
+  orphans: unknown[];
+  stale: unknown[];
+  untagged: unknown[];
+}
 
 export function AppSidebar() {
-  const entries = listEntries().sort((a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime());
-  const recent = entries.slice(0, 6);
-  const tags = Array.from(new Set(entries.flatMap((entry) => entry.tags))).sort().slice(0, 16);
-  const maintenance = getMaintenanceReport();
-  const issueCount = maintenance.missing.length + maintenance.orphans.length + maintenance.stale.length + maintenance.untagged.length;
+  const [entries, setEntries] = useState<WikiMeta[]>([]);
+  const [maintenance, setMaintenance] = useState<MaintenanceData>({ missing: [], orphans: [], stale: [], untagged: [] });
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [entriesRes, maintenanceRes] = await Promise.all([
+        fetch("/api/wiki"),
+        fetch("/api/maintenance"),
+      ]);
+
+      if (entriesRes.ok) {
+        const data = await entriesRes.json();
+        setEntries(data.entries ?? []);
+      }
+
+      if (maintenanceRes.ok) {
+        const data = await maintenanceRes.json();
+        setMaintenance(data);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+
+    const handleFocus = () => fetchData();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchData();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [fetchData]);
+
+  const sortedEntries = entries.sort(
+    (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
+  );
+  const recent = sortedEntries.slice(0, 6);
+
+  // Tags sorted by frequency (most used first)
+  const tagCounts = new Map<string, number>();
+  entries.forEach((entry) => {
+    entry.tags.forEach((tag) => {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    });
+  });
+  const tags = Array.from(tagCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag]) => tag)
+    .slice(0, 16);
+
+  const issueCount =
+    maintenance.missing.length +
+    maintenance.orphans.length +
+    maintenance.stale.length +
+    maintenance.untagged.length;
 
   return (
     <aside className="hidden xl:block w-72 shrink-0 border-r border-[var(--color-wiki-border)] bg-[var(--color-wiki-bg)]/80">
@@ -19,18 +90,22 @@ export function AppSidebar() {
             Recent
           </div>
           <div className="space-y-1">
-            {recent.map((entry) => (
-              <Link
-                key={entry.slug}
-                href={`/wiki/${entry.slug}`}
-                className="block rounded-lg px-2 py-2 hover:bg-[var(--color-wiki-subtle)]"
-              >
-                <p className="truncate text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
-                <p className="mt-0.5 text-[11px] text-[var(--color-wiki-muted)]">
-                  {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
-                </p>
-              </Link>
-            ))}
+            {loading && recent.length === 0 ? (
+              <p className="text-sm text-[var(--color-wiki-muted)]">Loading...</p>
+            ) : (
+              recent.map((entry) => (
+                <Link
+                  key={entry.slug}
+                  href={`/wiki/${entry.slug}`}
+                  className="block rounded-lg px-2 py-2 hover:bg-[var(--color-wiki-subtle)]"
+                >
+                  <p className="truncate text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--color-wiki-muted)]">
+                    {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
+                  </p>
+                </Link>
+              ))
+            )}
           </div>
         </section>
 

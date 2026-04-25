@@ -2,6 +2,7 @@ import { listEntries } from "@/lib/wiki";
 import { SearchBar } from "@/components/SearchBar";
 import { TagCloud } from "@/components/TagCloud";
 import { ViewSwitcher } from "@/components/ViewSwitcher";
+import { RefreshOnFocus } from "@/components/RefreshOnFocus";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +11,20 @@ export default function IndexPage() {
     (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
   );
 
-  const allTags = Array.from(new Set(entries.flatMap((e) => e.tags))).sort();
+  // Tags sorted by frequency (most used first)
+  const tagCounts = new Map<string, number>();
+  entries.forEach((entry) => {
+    entry.tags.forEach((tag) => {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    });
+  });
+  const allTags = Array.from(tagCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag]) => tag);
 
   return (
     <div>
+      <RefreshOnFocus />
       <div className="mb-8 border-b border-[var(--color-wiki-border)] pb-8">
         <p className="mb-3 font-mono text-xs font-medium uppercase text-[var(--color-wiki-muted)]">Knowledge base</p>
         <h1 className="mb-3 text-4xl font-semibold leading-none text-[var(--color-wiki-text)] sm:text-5xl">Agent Wiki</h1>
