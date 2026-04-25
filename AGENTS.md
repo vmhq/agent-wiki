@@ -50,8 +50,9 @@ bun run lint
 Both apps use the shared `@agent-wiki/wiki` package:
 
 - `packages/wiki/src/index.ts` — Core wiki operations (CRUD, search, graph, history, maintenance)
-- `apps/web/lib/wiki.ts` — Thin wrapper that creates a store instance and re-exports types/schemas
+- `apps/web/lib/wiki.ts` — Thin wrapper around `@agent-wiki/wiki`; uses `createWikiStoreInstance()` with lazy initialization
 - `apps/mcp/src/wiki.ts` — Identical wrapper for the MCP server
+- `apps/web/lib/utils.ts` — Shared web utilities (`computeTagFrequency`, `getTagsByFrequency`, `formatRelativeDate`)
 
 The path is configured via `WIKI_DIR` env var (default: `../../wiki` relative to each app's CWD in development, `/wiki` in Docker).
 
@@ -158,3 +159,16 @@ The `wiki_data` Docker volume persists wiki files across container restarts. In 
 - `react-force-graph-2d` is imported as `dynamic<any>(...)` to bypass complex generic type mismatch
 - MCP server: `"module": "ESNext"`, `"moduleResolution": "bundler"`, all imports use `.js` extensions
 - **Express 5**: `express.json()` and `express.urlencoded()` are re-exported from `body-parser` — the separate `body-parser` dependency ensures correct types
+
+## Security notes
+
+- API key is stored in `sessionStorage` (not `localStorage`) in the web editor — clears when the tab closes
+- Rate limiting is enabled on both apps: 100 requests per 15 minutes on web API, 100 per 15 minutes on MCP (10 per minute for OAuth endpoints)
+- CORS is open (`origin: "*"`) on MCP by design — auth is enforced via Bearer token
+
+## Utilities
+
+Shared web utilities live in `apps/web/lib/utils.ts`:
+- `computeTagFrequency(entries)` — returns `Map<string, number>`
+- `getTagsByFrequency(entries, limit?)` — returns sorted tag array
+- `formatRelativeDate(date)` — wrapper around `date-fns`

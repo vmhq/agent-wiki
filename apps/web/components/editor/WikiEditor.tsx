@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Columns2, Eye, FileText, KeyRound, Save, Trash2 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import type { WikiEntry } from "@/lib/wiki";
+import { slugify } from "@agent-wiki/wiki";
 
 interface Props {
   entry?: WikiEntry;
@@ -16,19 +17,9 @@ function splitTags(value: string): string[] {
   return Array.from(new Set(value.split(",").map((tag) => tag.trim()).filter(Boolean)));
 }
 
-function slugify(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 function getStoredKey(): string {
   if (typeof window === "undefined") return "";
-  return window.localStorage.getItem("agent-wiki-api-key") ?? "";
+  return window.sessionStorage.getItem("agent-wiki-api-key") ?? "";
 }
 
 export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Props) {
@@ -61,7 +52,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
     setIsSaving(true);
     setStatus("");
     try {
-      if (apiKey.trim()) window.localStorage.setItem("agent-wiki-api-key", apiKey.trim());
+      if (apiKey.trim()) window.sessionStorage.setItem("agent-wiki-api-key", apiKey.trim());
       const nextSlug = normalizedSlug;
       const body = JSON.stringify({ slug: nextSlug, title: title.trim(), content, tags: splitTags(tags) });
       if (isExisting) {
@@ -87,7 +78,7 @@ export function WikiEditor({ entry, initialSlug = "", existingSlugs = [] }: Prop
     setIsSaving(true);
     setStatus("");
     try {
-      if (apiKey.trim()) window.localStorage.setItem("agent-wiki-api-key", apiKey.trim());
+      if (apiKey.trim()) window.sessionStorage.setItem("agent-wiki-api-key", apiKey.trim());
       await request(`/api/wiki/${entry.slug}`, { method: "DELETE" });
       router.push("/");
       router.refresh();

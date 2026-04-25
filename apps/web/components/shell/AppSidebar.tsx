@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Clock, Tags } from "lucide-react";
 import type { WikiMeta } from "@/lib/wiki";
+import { getTagsByFrequency, formatRelativeDate } from "@/lib/utils";
 
 interface MaintenanceData {
   missing: unknown[];
@@ -63,17 +63,7 @@ export function AppSidebar() {
   );
   const recent = sortedEntries.slice(0, 6);
 
-  // Tags sorted by frequency (most used first)
-  const tagCounts = new Map<string, number>();
-  entries.forEach((entry) => {
-    entry.tags.forEach((tag) => {
-      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
-    });
-  });
-  const tags = Array.from(tagCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([tag]) => tag)
-    .slice(0, 16);
+  const tags = getTagsByFrequency(entries, 16);
 
   const issueCount =
     maintenance.missing.length +
@@ -101,7 +91,7 @@ export function AppSidebar() {
                 >
                   <p className="truncate text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                   <p className="mt-0.5 text-[11px] text-[var(--color-wiki-muted)]">
-                    {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
+                    {formatRelativeDate(entry.updated)}
                   </p>
                 </Link>
               ))

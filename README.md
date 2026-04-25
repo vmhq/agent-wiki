@@ -10,7 +10,7 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 | **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
 | **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
 
-**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions
+**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions · express-rate-limit
 
 ---
 
@@ -227,6 +227,15 @@ Generate a secure secret:
 ```bash
 openssl rand -hex 32
 ```
+
+---
+
+## Security
+
+- **Rate limiting**: Both services implement rate limiting — 100 requests per 15 minutes per IP on API routes, with stricter limits (10/min) on OAuth endpoints
+- **API key storage**: The web editor stores the API key in `sessionStorage` (clears when the tab closes), never in `localStorage`
+- **Auth**: Write operations require `Authorization: Bearer <WIKI_API_KEY>` on both web API and MCP server
+- **CORS**: MCP server allows all origins (`*`) by design — authentication is enforced via Bearer token
 
 ---
 

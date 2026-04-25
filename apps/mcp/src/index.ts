@@ -12,6 +12,7 @@
 
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { createMcpServer } from "./server.js";
@@ -35,7 +36,31 @@ app.use(
   })
 );
 
+// Rate limiting: 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ error: "too_many_requests", error_description: "Rate limit exceeded" });
+  },
+});
+app.use(limiter);
+
+// Stricter rate limiting for OAuth endpoints (10 requests per minute)
+const oauthLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (_req, res) => {
+    res.status(429).json({ error: "too_many_requests", error_description: "OAuth rate limit exceeded" });
+  },
+});
+
 // ── OAuth endpoints (no auth required) ───────────────────────────────────────
+app.use(oauthLimiter);
 app.use(createOAuthRouter());
 
 // ── Health ────────────────────────────────────────────────────────────────────

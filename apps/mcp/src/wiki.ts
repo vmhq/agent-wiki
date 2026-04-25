@@ -1,6 +1,5 @@
-import path from "path";
 import {
-  createWikiStore,
+  createWikiStoreInstance,
   type Backlink,
   type GraphData,
   type GraphLink,
@@ -15,6 +14,7 @@ export type { Backlink, GraphData, GraphLink, GraphNode, MaintenanceReport, Patc
 export {
   createEntrySchema,
   errorStatus,
+  getPublicErrorMessage,
   isWikiError,
   patchEntrySchema,
   slugSchema,
@@ -22,9 +22,9 @@ export {
   validateSlug,
 } from "@agent-wiki/wiki";
 
-export const WIKI_DIR = process.env.WIKI_DIR ?? path.join(process.cwd(), "../../wiki");
+export const WIKI_DIR = process.env.WIKI_DIR;
 
-const store = createWikiStore(WIKI_DIR);
+const store = createWikiStoreInstance(WIKI_DIR);
 
 export const listEntries = store.listEntries;
 export const getEntry = store.getEntry;

@@ -1,6 +1,5 @@
-import path from "path";
 import {
-  createWikiStore,
+  createWikiStoreInstance,
   type Backlink,
   type GraphData,
   type GraphLink,
@@ -23,18 +22,29 @@ export {
   validateSlug,
 } from "@agent-wiki/wiki";
 
-export const WIKI_DIR = process.env.WIKI_DIR ?? path.join(process.cwd(), "../../wiki");
+export const WIKI_DIR = process.env.WIKI_DIR;
 
-const store = createWikiStore(WIKI_DIR);
+let storeInstance: ReturnType<typeof createWikiStoreInstance> | null = null;
 
-export const listEntries = store.listEntries;
-export const getEntry = store.getEntry;
-export const createEntry = store.createEntry;
-export const updateEntry = store.updateEntry;
-export const patchEntry = store.patchEntry;
-export const deleteEntry = store.deleteEntry;
-export const searchEntries = store.searchEntries;
-export const getGraphData = store.getGraphData;
-export const getBacklinks = store.getBacklinks;
-export const getMaintenanceReport = store.getMaintenanceReport;
-export const listHistory = store.listHistory;
+function getStore() {
+  if (!storeInstance) {
+    storeInstance = createWikiStoreInstance(WIKI_DIR);
+  }
+  return storeInstance;
+}
+
+export function resetStore() {
+  storeInstance = null;
+}
+
+export const listEntries = () => getStore().listEntries();
+export const getEntry = (slug: string) => getStore().getEntry(slug);
+export const createEntry = (slug: string, title: string, content: string, tags?: string[]) => getStore().createEntry(slug, title, content, tags);
+export const updateEntry = (slug: string, content: string, meta?: { title?: string; tags?: string[] }) => getStore().updateEntry(slug, content, meta);
+export const patchEntry = (slug: string, operation: PatchOperation, params: { content?: string; search?: string; replacement?: string; anchor?: string }) => getStore().patchEntry(slug, operation, params);
+export const deleteEntry = (slug: string) => getStore().deleteEntry(slug);
+export const searchEntries = (query: string) => getStore().searchEntries(query);
+export const getGraphData = () => getStore().getGraphData();
+export const getBacklinks = (slug: string) => getStore().getBacklinks(slug);
+export const getMaintenanceReport = () => getStore().getMaintenanceReport();
+export const listHistory = (slug: string) => getStore().listHistory(slug);

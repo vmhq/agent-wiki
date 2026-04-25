@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, CircleDashed, Clock3, FilePlus, Tags } from "lucide-react";
 import { getMaintenanceReport } from "@/lib/wiki";
+import { formatRelativeDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +87,7 @@ export default function MaintenancePage() {
               <Link key={entry.slug} href={`/edit/${entry.slug}`} className="block rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 hover:opacity-80">
                 <p className="text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                 <p className="text-xs text-[var(--color-wiki-muted)]">
-                  Updated {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
+                  Updated {formatRelativeDate(entry.updated)}
                 </p>
               </Link>
             ))}

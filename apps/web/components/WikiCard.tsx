@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
 import { Clock, Tag } from "lucide-react";
 import type { WikiMeta } from "@/lib/wiki";
+import { formatRelativeDate } from "@/lib/utils";
 
 interface Props {
   entry: WikiMeta;
@@ -42,7 +42,7 @@ export function WikiCard({ entry }: Props) {
 
         <span className="flex items-center gap-1 text-[11px] text-[var(--color-wiki-muted)] whitespace-nowrap shrink-0">
           <Clock size={11} />
-          {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
+          {formatRelativeDate(entry.updated)}
         </span>
       </div>
     </Link>

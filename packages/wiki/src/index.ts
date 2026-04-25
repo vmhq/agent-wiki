@@ -454,7 +454,7 @@ export function createWikiStore(wikiDir: string) {
       .filter((entry) => !inbound.has(entry.slug))
       .sort((a, b) => a.title.localeCompare(b.title));
     const stale = current.metas
-      .filter((entry) => Number.isNaN(Date.parse(entry.updated)) || new Date(entry.updated).getTime() < staleCutoff)
+      .filter((entry) => isNaN(Date.parse(entry.updated)) || new Date(entry.updated).getTime() < staleCutoff)
       .sort((a, b) => new Date(a.updated).getTime() - new Date(b.updated).getTime());
     const untagged = current.metas
       .filter((entry) => entry.tags.length === 0)
@@ -489,3 +489,8 @@ export function createWikiStore(wikiDir: string) {
 }
 
 export type WikiStore = ReturnType<typeof createWikiStore>;
+
+export function createWikiStoreInstance(wikiDir?: string) {
+  const resolvedDir = wikiDir ?? path.join(process.cwd(), "../../wiki");
+  return createWikiStore(resolvedDir);
+}

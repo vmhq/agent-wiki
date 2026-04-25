@@ -15,9 +15,10 @@
   "dependencies": {
     "@agent-wiki/wiki": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.11.0",
-    "express": "^5.2.1",
     "body-parser": "^2.2.1",
     "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
     "gray-matter": "^4.0.3",
     "jose": "^6.2.2",
     "uuid": "^14.0.0",

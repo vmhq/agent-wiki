@@ -1,9 +1,9 @@
 import { getBacklinks, getEntry, listEntries } from "@/lib/wiki";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { notFound } from "next/navigation";
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { Clock, Tag, ArrowLeft, Edit } from "lucide-react";
+import { formatRelativeDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export default async function WikiPage({ params }: Props) {
         <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--color-wiki-muted)]">
           <span className="inline-flex items-center gap-1.5">
             <Clock size={14} />
-            Updated {formatDistanceToNow(new Date(entry.updated), { addSuffix: true })}
+            Updated {formatRelativeDate(entry.updated)}
           </span>
 
           {entry.tags.length > 0 && (
@@ -97,7 +97,7 @@ export default async function WikiPage({ params }: Props) {
       {/* Footer */}
       <div className="mt-12 pt-6 border-t border-[var(--color-wiki-border)] text-xs text-[var(--color-wiki-muted)] flex justify-between items-center">
         <span>
-          Created {formatDistanceToNow(new Date(entry.created), { addSuffix: true })}
+          Created {formatRelativeDate(entry.created)}
         </span>
         <span className="flex items-center gap-1.5">
           <Edit size={12} />
