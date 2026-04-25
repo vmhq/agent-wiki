@@ -10,7 +10,7 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 | **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
 | **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
 
-**Stack:** Next.js 15 · TypeScript · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions
+**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions
 
 ---
 
@@ -55,7 +55,7 @@ docker compose up -d --build
 ```
 agent-wiki/
 ├── apps/
-│   ├── web/                    # Next.js 15 web application
+│   ├── web/                    # Next.js 16 web application
 │   │   ├── app/
 │   │   │   ├── page.tsx        # Index — list all wiki entries
 │   │   │   ├── wiki/[slug]/    # Markdown viewer

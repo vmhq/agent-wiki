@@ -4,8 +4,8 @@
 
 Bun monorepo with a shared wiki library and two apps:
 
-- `apps/web` — Next.js 15 web app (port 3000)
-- `apps/mcp` — Express + MCP SDK server (port 3001)
+- `apps/web` — Next.js 16 web app (port 3000)
+- `apps/mcp` — Express 5 + body-parser + MCP SDK server (port 3001)
 - `packages/wiki` — Shared wiki library (`@agent-wiki/wiki`) used by both apps
 
 Wiki files live at the repo root under `wiki/` (locally) or `/wiki` (Docker volume).
@@ -152,7 +152,9 @@ The `wiki_data` Docker volume persists wiki files across container restarts. In 
 
 ## TypeScript notes
 
-- Web app: `target: ES2017`, `downlevelIteration: true` (needed for `Array.from(new Set(...))`)
+- **TypeScript 6** — stricter than 5; `@types/node@25` requires `"types": ["node"]` in tsconfig for Node.js globals (`fs`, `path`)
+- Web app: `target: ES2017` (Next.js auto-adds `downlevelIteration` when needed for `Array.from(new Set(...))`)
 - Use `Array.from(new Set(...))` instead of `[...new Set(...)]` to avoid TS2802
 - `react-force-graph-2d` is imported as `dynamic<any>(...)` to bypass complex generic type mismatch
 - MCP server: `"module": "ESNext"`, `"moduleResolution": "bundler"`, all imports use `.js` extensions
+- **Express 5**: `express.json()` and `express.urlencoded()` are re-exported from `body-parser` — the separate `body-parser` dependency ensures correct types

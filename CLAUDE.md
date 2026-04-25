@@ -2,10 +2,11 @@
 
 ## Project overview
 
-pnpm monorepo with two apps that share a `wiki/` directory of Markdown files:
+Bun monorepo with a shared wiki library and two apps:
 
-- `apps/web` — Next.js 15 web app (port 3000)
-- `apps/mcp` — Express + MCP SDK server (port 3001)
+- `apps/web` — Next.js 16 web app (port 3000)
+- `apps/mcp` — Express 5 + body-parser + MCP SDK server (port 3001)
+- `packages/wiki` — Shared wiki library (`@agent-wiki/wiki`) used by both apps
 
 Wiki files live at the repo root under `wiki/` (locally) or `/wiki` (Docker volume).
 
@@ -13,37 +14,44 @@ Wiki files live at the repo root under `wiki/` (locally) or `/wiki` (Docker volu
 
 ```bash
 # Install all dependencies
-pnpm install
+bun install
 
 # Run both apps in parallel (dev mode)
-pnpm dev
+# Also builds the shared @agent-wiki/wiki package first
+bun run dev
 
 # Run only the web app
-pnpm --filter web dev
+bun run --filter web dev
 
 # Run only the MCP server
-pnpm --filter mcp dev
+bun run --filter mcp dev
 
 # Type-check both apps
-pnpm --filter web exec tsc --noEmit
-pnpm --filter mcp exec tsc --noEmit
+bun run typecheck
 
-# Build everything
-pnpm build
+# Build everything (wiki package + both apps)
+bun run build
 
 # Build a single app
-pnpm --filter web build
-pnpm --filter mcp build
+bun run --filter web build
+bun run --filter mcp build
+
+# Run tests for the shared wiki package
+bun run test
+
+# Lint everything
+bun run lint
 ```
 
 ## Architecture
 
 ### Storage layer
 
-Both apps read/write the same Markdown files via their own copy of the wiki library:
+Both apps use the shared `@agent-wiki/wiki` package:
 
-- `apps/web/lib/wiki.ts` — used by Next.js API routes and server components
-- `apps/mcp/src/wiki.ts` — used by MCP tools
+- `packages/wiki/src/index.ts` — Core wiki operations (CRUD, search, graph, history, maintenance)
+- `apps/web/lib/wiki.ts` — Thin wrapper that creates a store instance and re-exports types/schemas
+- `apps/mcp/src/wiki.ts` — Identical wrapper for the MCP server
 
 The path is configured via `WIKI_DIR` env var (default: `../../wiki` relative to each app's CWD in development, `/wiki` in Docker).
 
@@ -60,12 +68,13 @@ updated: "2025-01-01T00:00:00.000Z"
 
 ### Web app (`apps/web`)
 
-- **Pages**: `/` (index), `/wiki/[slug]` (viewer), `/search` (search), `/graph` (graph)
-- **API routes**: `/api/wiki`, `/api/wiki/[slug]`, `/api/search`, `/api/graph`
-- **Components**: `WikiCard`, `MarkdownRenderer`, `GraphView`, `SearchBar`, `Navbar`
+- **Pages**: `/` (index), `/wiki/[slug]` (viewer), `/edit/[[...slug]]` (editor), `/search` (search), `/graph` (graph), `/maintenance` (maintenance report)
+- **API routes**: `/api/wiki`, `/api/wiki/[slug]`, `/api/search`, `/api/graph`, `/api/health`
+- **Components**: `WikiCard`, `MarkdownRenderer`, `GraphView`, `SearchBar`, `Navbar`, `WikiEditor`, `AppSidebar`, `CommandPalette`, `ThemeProvider`, `ThemeSwitcher`, `TagCloud`, `ViewSwitcher`
 - All pages use `dynamic = "force-dynamic"` so they always read fresh files
 - The graph view uses `react-force-graph-2d` loaded with `dynamic(..., { ssr: false })`
 - Wikilinks (`[[slug]]`) are pre-processed in `MarkdownRenderer` before passing to react-markdown
+- Write operations (POST/PUT/PATCH/DELETE) require API key auth via `apps/web/lib/auth.ts`
 
 ### MCP server (`apps/mcp`)
 
@@ -78,10 +87,13 @@ updated: "2025-01-01T00:00:00.000Z"
 
 | File | Purpose |
 |------|---------|
-| `apps/web/lib/wiki.ts` | All file-system operations + graph data builder |
+| `packages/wiki/src/index.ts` | Core wiki library (CRUD, search, graph, history, maintenance) |
+| `apps/web/lib/wiki.ts` | Web app wrapper around `@agent-wiki/wiki` |
+| `apps/web/lib/auth.ts` | API key auth middleware for Next.js write routes |
 | `apps/web/components/GraphView.tsx` | Force-directed graph (SSR disabled) |
 | `apps/web/components/MarkdownRenderer.tsx` | Markdown render + `[[wikilink]]` parsing |
-| `apps/mcp/src/server.ts` | MCP tool definitions (7 tools) |
+| `apps/web/components/editor/WikiEditor.tsx` | Full-page wiki editor with preview |
+| `apps/mcp/src/server.ts` | MCP tool definitions (10 tools) |
 | `apps/mcp/src/auth.ts` | OAuth 2.0 server + JWT helpers + auth middleware |
 | `apps/mcp/src/index.ts` | Express server wiring everything together |
 | `Dockerfile.web` | Multi-stage build for web (uses Next.js standalone output) |
@@ -96,7 +108,7 @@ Copy `.env.example` to `.env` before running locally. Key variables:
 | Variable | Where used | Notes |
 |----------|-----------|-------|
 | `WIKI_DIR` | Both apps | Path to wiki files |
-| `WIKI_API_KEY` | MCP server | API key for `Authorization: Bearer` auth |
+| `WIKI_API_KEY` | Both apps | API key for `Authorization: Bearer` auth (required in production for both web and MCP) |
 | `WIKI_OAUTH_PASSWORD` | MCP server | Password shown on OAuth consent page |
 | `WIKI_JWT_SECRET` | MCP server | Signs access tokens — must be secret in prod |
 | `MCP_BASE_URL` | MCP server | Public URL included in OAuth metadata |
@@ -111,9 +123,10 @@ Copy `.env.example` to `.env` before running locally. Key variables:
 
 ## Adding a new wiki operation
 
-1. Add the function to both `apps/web/lib/wiki.ts` and `apps/mcp/src/wiki.ts` (they're identical in structure)
-2. Expose it via an API route in `apps/web/app/api/...`
-3. Optionally expose it as a new MCP tool
+1. Add the function to `packages/wiki/src/index.ts`
+2. Re-export it from `apps/web/lib/wiki.ts` and `apps/mcp/src/wiki.ts`
+3. Expose it via an API route in `apps/web/app/api/...`
+4. Optionally expose it as a new MCP tool
 
 ## Docker
 
@@ -139,7 +152,9 @@ The `wiki_data` Docker volume persists wiki files across container restarts. In 
 
 ## TypeScript notes
 
-- Web app: `target: ES2017`, `downlevelIteration: true` (needed for `Array.from(new Set(...))`)
+- **TypeScript 6** — stricter than 5; `@types/node@25` requires `"types": ["node"]` in tsconfig for Node.js globals (`fs`, `path`)
+- Web app: `target: ES2017` (Next.js auto-adds `downlevelIteration` when needed for `Array.from(new Set(...))`)
 - Use `Array.from(new Set(...))` instead of `[...new Set(...)]` to avoid TS2802
 - `react-force-graph-2d` is imported as `dynamic<any>(...)` to bypass complex generic type mismatch
 - MCP server: `"module": "ESNext"`, `"moduleResolution": "bundler"`, all imports use `.js` extensions
+- **Express 5**: `express.json()` and `express.urlencoded()` are re-exported from `body-parser` — the separate `body-parser` dependency ensures correct types
