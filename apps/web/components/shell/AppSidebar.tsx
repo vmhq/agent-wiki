@@ -58,7 +58,7 @@ export function AppSidebar() {
     };
   }, [fetchData]);
 
-  const sortedEntries = entries.sort(
+  const sortedEntries = Array.from(entries).sort(
     (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
   );
   const recent = sortedEntries.slice(0, 6);

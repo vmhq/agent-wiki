@@ -97,7 +97,7 @@ export function GraphView({ data }: Props) {
     const visibleIds = new Set(nodes.map((node) => node.id));
     return {
       nodes,
-      links: data.links.filter((link) => visibleIds.has(link.source) && visibleIds.has(link.target)),
+      links: data.links.filter((link) => visibleIds.has(nodeId(link.source)) && visibleIds.has(nodeId(link.target))),
     };
   }, [data, query, selectedTag]);
 
