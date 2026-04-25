@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { AppSidebar } from "@/components/shell/AppSidebar";
+import { BackToTopButton } from "@/components/shell/BackToTopButton";
 import { CommandPalette } from "@/components/shell/CommandPalette";
 import { ThemeProvider, themeInitScript } from "@/components/theme/ThemeProvider";
 import { listEntries } from "@/lib/wiki";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="mx-auto max-w-7xl">{children}</div>
             </main>
           </div>
+          <BackToTopButton />
         </ThemeProvider>
       </body>
     </html>
