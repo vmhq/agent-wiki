@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Columns2, Eye, FileText, KeyRound, Save, Trash2 } from "lucide-react";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import type { WikiEntry } from "@/lib/wiki";
-import { slugify } from "@agent-wiki/wiki";
+import { slugify } from "@agent-wiki/wiki/utils";
 
 interface Props {
   entry?: WikiEntry;
