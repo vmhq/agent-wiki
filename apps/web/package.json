@@ -8,8 +8,8 @@
     "prebuild": "bun run --cwd ../../packages/wiki build",
     "build": "bun --bun next build",
     "start": "bun --bun next start --port 3000",
-    "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx next lint"
   },
   "dependencies": {
     "@agent-wiki/wiki": "workspace:*",

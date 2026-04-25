@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { ExternalLink, Maximize2, Pencil, Search, X, ZoomIn, ZoomOut } from "lucide-react";
+import { ExternalLink, Maximize2, Pencil, RotateCcw, Search, X, ZoomIn, ZoomOut } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,8 +129,9 @@ export function GraphView({ data }: Props) {
     if (!fg) return;
 
     if (!forceConfigured.current) {
-      fg.d3Force("charge")?.strength(-350);
-      fg.d3Force("link")?.distance(90).strength(0.4);
+      fg.d3Force("charge")?.strength(-900);
+      fg.d3Force("link")?.distance(140).strength(0.35);
+      fg.d3Force("center")?.strength(0.06);
       forceConfigured.current = true;
       fg.d3ReheatSimulation();
       return;
@@ -160,7 +161,7 @@ export function GraphView({ data }: Props) {
     (node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const isHovered = hoveredRef.current?.id === node.id;
       const connections = connectionCount.get(node.id) ?? 0;
-      const r = Math.max(4, Math.min(14, 5 + connections * 1.5));
+      const r = Math.max(3, Math.min(20, 4 + connections * 2.2));
       const color = getNodeColor(node, tagColorMap);
       const nx = node.x ?? 0;
       const ny = node.y ?? 0;
@@ -278,7 +279,20 @@ export function GraphView({ data }: Props) {
 
       {(allTags.length > 0 || data.nodes.some((node) => node.missing)) && (
         <div className="wiki-card absolute top-4 right-4 z-10 max-h-72 overflow-y-auto rounded-xl bg-[var(--color-wiki-bg)]/90 px-3 py-2.5 backdrop-blur-sm">
-          <p className="text-[11px] font-semibold text-[var(--color-wiki-muted)] uppercase tracking-wider mb-2">Tags</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[11px] font-semibold text-[var(--color-wiki-muted)] uppercase tracking-wider">Tags</p>
+            {(query || selectedTag !== "all") && (
+              <button
+                type="button"
+                onClick={() => { setQuery(""); setSelectedTag("all"); }}
+                title="Reset filters"
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)] hover:bg-[var(--color-wiki-subtle)] transition-colors"
+              >
+                <RotateCcw size={10} />
+                Reset
+              </button>
+            )}
+          </div>
           <div className="flex flex-col gap-1">
             <button
               type="button"

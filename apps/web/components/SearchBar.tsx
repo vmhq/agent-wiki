@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useState } from "react";
 
 interface Props {
@@ -31,9 +31,19 @@ export function SearchBar({ defaultValue = "" }: Props) {
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Search wiki entries..."
-        className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] py-2.5 pl-10 pr-4 text-sm text-[var(--color-wiki-text)] placeholder-[var(--color-wiki-muted)] transition-shadow focus:shadow-[var(--shadow-wiki-focus)] focus:outline-none"
+        placeholder="Search"
+        className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] py-2.5 pl-10 pr-10 text-sm text-[var(--color-wiki-text)] placeholder-[var(--color-wiki-muted)] transition-shadow focus:shadow-[var(--shadow-wiki-focus)] focus:outline-none"
       />
+      {value && (
+        <button
+          type="button"
+          onClick={() => { setValue(""); router.push("/search"); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-wiki-muted)] hover:text-[var(--color-wiki-text)]"
+          aria-label="Clear search"
+        >
+          <X size={16} />
+        </button>
+      )}
     </form>
   );
 }
