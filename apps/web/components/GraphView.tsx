@@ -75,12 +75,12 @@ export function GraphView({ data }: Props) {
     const inbound: GraphNode[] = [];
     const outbound: GraphNode[] = [];
     for (const link of data.links) {
-      if (link.source === selectedNode.id) {
-        const target = nodeById.get(link.target);
+      if (nodeId(link.source) === selectedNode.id) {
+        const target = nodeById.get(nodeId(link.target));
         if (target) outbound.push(target);
       }
-      if (link.target === selectedNode.id) {
-        const source = nodeById.get(link.source);
+      if (nodeId(link.target) === selectedNode.id) {
+        const source = nodeById.get(nodeId(link.source));
         if (source) inbound.push(source);
       }
     }
@@ -217,6 +217,7 @@ export function GraphView({ data }: Props) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search"
             className="wiki-ring h-8 w-44 rounded-lg bg-[var(--color-wiki-surface)]/90 pl-7 pr-7 text-xs text-[var(--color-wiki-text)] outline-none backdrop-blur-sm focus:shadow-[var(--shadow-wiki-focus)]"
           />
           {query && (
