@@ -63,7 +63,7 @@ export function CommandPalette({ entries }: Props) {
       .filter((entry) =>
         entry.title.toLowerCase().includes(q) ||
         entry.slug.includes(q) ||
-        entry.tags.some((tag) => tag.toLowerCase().includes(q))
+        entry.tags.some((tag: string) => tag.toLowerCase().includes(q))
       )
       .slice(0, 10);
   }, [entries, query]);

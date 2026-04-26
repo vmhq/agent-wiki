@@ -1,4 +1,4 @@
-import { getBacklinks, getEntry, listEntries } from "@/lib/wiki";
+import { getBacklinks, getEntry, listEntries, type Backlink, type WikiMeta } from "@/lib/wiki";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default async function WikiPage({ params }: Props) {
   const entry = getEntry(slug);
   if (!entry) notFound();
   const backlinks = getBacklinks(slug);
-  const existingSlugs = listEntries().map((item) => item.slug);
+  const existingSlugs = listEntries().map((item: WikiMeta) => item.slug);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -54,7 +54,7 @@ export default async function WikiPage({ params }: Props) {
             <div className="inline-flex items-center gap-2">
               <Tag size={14} />
               <div className="flex gap-1.5">
-                {entry.tags.map((tag) => (
+                {entry.tags.map((tag: string) => (
                   <Link
                     key={tag}
                     href={`/search?q=${encodeURIComponent(tag)}`}
@@ -78,7 +78,7 @@ export default async function WikiPage({ params }: Props) {
         <section className="mt-12 pt-6 border-t border-[var(--color-wiki-border)]">
           <h2 className="text-sm font-semibold text-[var(--color-wiki-text)] mb-3">Backlinks</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {backlinks.map((link) => (
+            {backlinks.map((link: Backlink) => (
               <Link
                 key={link.slug}
                 href={`/wiki/${link.slug}`}

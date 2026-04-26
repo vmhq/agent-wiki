@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { WikiEditor } from "@/components/editor/WikiEditor";
-import { getEntry, listEntries } from "@/lib/wiki";
+import { getEntry, listEntries, type WikiMeta } from "@/lib/wiki";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export default async function EditPage({ params }: Props) {
   const { slug: slugParts } = await params;
   const slug = slugParts?.[0];
   const entry = slug ? getEntry(slug) : undefined;
-  const existingSlugs = listEntries().map((item) => item.slug);
+  const existingSlugs = listEntries().map((item: WikiMeta) => item.slug);
 
   return (
     <div className="max-w-5xl mx-auto">

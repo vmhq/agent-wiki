@@ -16,9 +16,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "bunx tsc",
     "test": "bun test src/*.test.ts",
-    "lint": "tsc --noEmit"
+    "lint": "bunx tsc --noEmit"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

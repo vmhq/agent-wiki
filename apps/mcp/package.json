@@ -7,10 +7,10 @@
     "predev": "bun run --cwd ../../packages/wiki build",
     "dev": "bun --watch src/index.ts",
     "prebuild": "bun run --cwd ../../packages/wiki build",
-    "build": "tsc",
+    "build": "bunx tsc",
     "start": "bun dist/index.js",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx tsc --noEmit"
   },
   "dependencies": {
     "@agent-wiki/wiki": "workspace:*",

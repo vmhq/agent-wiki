@@ -1,4 +1,4 @@
-import { searchEntries, listEntries } from "@/lib/wiki";
+import { searchEntries, listEntries, type WikiEntry, type WikiMeta } from "@/lib/wiki";
 import { WikiCard } from "@/components/WikiCard";
 import { SearchBar } from "@/components/SearchBar";
 import { Search } from "lucide-react";
@@ -12,7 +12,9 @@ interface Props {
 export default async function SearchPage({ searchParams }: Props) {
   const { q } = await searchParams;
   const query = q?.trim() ?? "";
-  const results = query ? searchEntries(query) : listEntries().map(e => ({ ...e, content: "" }));
+  const results = query
+    ? searchEntries(query)
+    : listEntries().map((entry: WikiMeta): WikiEntry => ({ ...entry, content: "" }));
 
   return (
     <div>
@@ -35,7 +37,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map((entry) => (
+          {results.map((entry: WikiEntry) => (
             <WikiCard key={entry.slug} entry={entry} />
           ))}
         </div>

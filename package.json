@@ -11,7 +11,7 @@
     "build": "bun run --filter @agent-wiki/wiki build && bun run --filter web build && bun run --filter mcp build",
     "start": "concurrently \"bun run --filter web start\" \"bun run --filter mcp start\"",
     "lint": "bun run --filter '*' lint",
-    "typecheck": "bun run --filter web typecheck && bun run --filter mcp typecheck",
+    "typecheck": "bun run --filter @agent-wiki/wiki build && bun run --filter web typecheck && bun run --filter mcp typecheck",
     "test": "bun run --filter @agent-wiki/wiki test"
   },
   "devDependencies": {

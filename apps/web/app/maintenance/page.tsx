@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, CircleDashed, Clock3, FilePlus, Tags } from "lucide-react";
-import { getMaintenanceReport } from "@/lib/wiki";
+import { getMaintenanceReport, type Backlink, type MaintenanceReport, type WikiMeta } from "@/lib/wiki";
 import { formatRelativeDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ function Panel({
 }
 
 export default function MaintenancePage() {
-  const report = getMaintenanceReport();
+  const report: MaintenanceReport = getMaintenanceReport();
 
   return (
     <div>
@@ -48,7 +48,7 @@ export default function MaintenancePage() {
             <p className="px-1 py-2 text-sm text-[var(--color-wiki-muted)]">No missing links.</p>
           ) : (
             <div className="space-y-2">
-              {report.missing.map((item) => (
+              {report.missing.map((item: { slug: string; sources: Backlink[] }) => (
                 <div key={item.slug} className="rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-[var(--color-wiki-text)]">[[{item.slug}]]</p>
@@ -61,7 +61,7 @@ export default function MaintenancePage() {
                     </Link>
                   </div>
                   <p className="mt-1 text-xs text-[var(--color-wiki-muted)]">
-                    Referenced by {item.sources.map((source) => source.title).join(", ")}
+                    Referenced by {item.sources.map((source: Backlink) => source.title).join(", ")}
                   </p>
                 </div>
               ))}
@@ -71,7 +71,7 @@ export default function MaintenancePage() {
 
         <Panel title="Orphans" count={report.orphans.length} icon={<CircleDashed size={15} className="text-[var(--color-wiki-muted)]" />}>
           <div className="space-y-2">
-            {report.orphans.map((entry) => (
+            {report.orphans.map((entry: WikiMeta) => (
               <Link key={entry.slug} href={`/wiki/${entry.slug}`} className="block rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 hover:opacity-80">
                 <p className="text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                 <p className="text-xs text-[var(--color-wiki-muted)]">/{entry.slug}</p>
@@ -83,7 +83,7 @@ export default function MaintenancePage() {
 
         <Panel title="Stale" count={report.stale.length} icon={<Clock3 size={15} className="text-[var(--color-wiki-muted)]" />}>
           <div className="space-y-2">
-            {report.stale.map((entry) => (
+            {report.stale.map((entry: WikiMeta) => (
               <Link key={entry.slug} href={`/edit/${entry.slug}`} className="block rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 hover:opacity-80">
                 <p className="text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                 <p className="text-xs text-[var(--color-wiki-muted)]">
@@ -97,7 +97,7 @@ export default function MaintenancePage() {
 
         <Panel title="Untagged" count={report.untagged.length} icon={<Tags size={15} className="text-[var(--color-wiki-muted)]" />}>
           <div className="space-y-2">
-            {report.untagged.map((entry) => (
+            {report.untagged.map((entry: WikiMeta) => (
               <Link key={entry.slug} href={`/edit/${entry.slug}`} className="block rounded-lg bg-[var(--color-wiki-subtle)] px-3 py-2 hover:opacity-80">
                 <p className="text-sm font-medium text-[var(--color-wiki-text)]">{entry.title}</p>
                 <p className="text-xs text-[var(--color-wiki-muted)]">/{entry.slug}</p>

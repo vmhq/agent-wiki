@@ -1,4 +1,4 @@
-import { listEntries } from "@/lib/wiki";
+import { listEntries, type WikiMeta } from "@/lib/wiki";
 import { getTagsByFrequency } from "@/lib/utils";
 import { SearchBar } from "@/components/SearchBar";
 import { TagCloud } from "@/components/TagCloud";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default function IndexPage() {
   const entries = listEntries().sort(
-    (a, b) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
+    (a: WikiMeta, b: WikiMeta) => new Date(b.updated).getTime() - new Date(a.updated).getTime()
   );
 
   const allTags = getTagsByFrequency(entries);

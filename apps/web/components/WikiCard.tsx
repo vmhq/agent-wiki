@@ -27,7 +27,7 @@ export function WikiCard({ entry }: Props) {
         {entry.tags.length > 0 ? (
           <div className="flex items-center gap-1.5 flex-wrap">
             <Tag size={11} className="text-[var(--color-wiki-muted)]" />
-            {entry.tags.slice(0, 3).map((tag) => (
+            {entry.tags.slice(0, 3).map((tag: string) => (
               <span
                 key={tag}
                 className="px-1.5 py-0.5 rounded-full text-[10px] bg-[var(--color-wiki-tag)] text-[var(--color-wiki-tag-text)]"
