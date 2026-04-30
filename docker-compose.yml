@@ -10,7 +10,8 @@ version: "3.9"
 #
 # Usage:
 #   cp .env.example .env && docker compose up -d
-#   docker compose up -d --build   (after code changes)
+#   docker compose pull && docker compose up -d
+#   docker compose up -d --build   (build locally after code changes)
 #   docker compose logs -f
 #   docker compose down            (stop)
 #   docker compose down -v         (stop + delete wiki data — destructive!)
@@ -23,7 +24,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mcp
-    image: ghcr.io/${GITHUB_REPOSITORY:-vmhq/agent-wiki}/mcp:latest
+    image: ${MCP_IMAGE:-registry.gitlab.com/vmhq/agent-wiki/mcp:latest}
+    pull_policy: ${MCP_PULL_POLICY:-always}
     container_name: agent-wiki-mcp
     ports:
       - "${MCP_PORT:-3001}:3001"
@@ -51,7 +53,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-    image: ghcr.io/${GITHUB_REPOSITORY:-vmhq/agent-wiki}/web:latest
+    image: ${WEB_IMAGE:-registry.gitlab.com/vmhq/agent-wiki/web:latest}
+    pull_policy: ${WEB_PULL_POLICY:-always}
     container_name: agent-wiki-web
     ports:
       - "${WEB_PORT:-3000}:3000"

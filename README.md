@@ -10,7 +10,7 @@ An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.git
 | **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
 | **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
 
-**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitHub Actions · express-rate-limit
+**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitLab CI/CD · express-rate-limit
 
 ---
 
@@ -41,6 +41,11 @@ cp .env.example .env
 
 docker compose up -d
 ```
+
+By default, Compose pulls the pre-built images published by this project's GitLab pipeline:
+
+- `registry.gitlab.com/vmhq/agent-wiki/web:latest`
+- `registry.gitlab.com/vmhq/agent-wiki/mcp:latest`
 
 To rebuild after code changes:
 
@@ -81,6 +86,7 @@ agent-wiki/
 ├── Dockerfile.web
 ├── Dockerfile.mcp
 ├── docker-compose.yml
+├── .gitlab-ci.yml
 └── .github/workflows/docker.yml
 ```
 
@@ -239,23 +245,49 @@ openssl rand -hex 32
 
 ---
 
-## CI/CD — GitHub Actions
+## CI/CD — GitLab Pipelines
 
-On every push to `main` (and on version tags `v*.*.*`), GitHub Actions builds and pushes two images to GitHub Container Registry:
+The repository now includes a root [`.gitlab-ci.yml`](.gitlab-ci.yml) designed for GitLab CI/CD.
 
-- `ghcr.io/vmhq/agent-wiki/web:latest`
-- `ghcr.io/vmhq/agent-wiki/mcp:latest`
+Pipeline behavior:
 
-Images are built for `linux/amd64` and `linux/arm64` with layer caching.
+- **Merge requests** run verification jobs (`test`, `typecheck`, `build`) and also build both Docker images without pushing them
+- **Default branch pushes** run the same verification jobs and push fresh multi-arch images to the GitLab container registry
+- **Version tags** like `v1.2.3` also push versioned images, including `1.2.3` and `1.2`
 
-To pull pre-built images instead of building locally:
+Images are published to the GitLab container registry using `CI_REGISTRY_IMAGE`:
+
+- `$CI_REGISTRY_IMAGE/web`
+- `$CI_REGISTRY_IMAGE/mcp`
+
+Published tags include:
+
+- `latest` on the default branch
+- `sha-<short-sha>` on every image build
+- `<branch-slug>` on branch-based builds
+- `vX.Y.Z`, `X.Y.Z`, and `X.Y` on semantic version tags
+
+The Docker jobs use `docker buildx` with `docker:dind`, which matches GitLab's documented approach for multi-platform builds and registry publishing. Your runner must therefore allow Docker-in-Docker for the image-publishing stage.
+
+Docker Compose uses the GitLab registry images by default:
 
 ```bash
-# Set your GitHub repo in .env
-echo "GITHUB_REPOSITORY=vmhq/agent-wiki" >> .env
+WEB_IMAGE=registry.gitlab.com/vmhq/agent-wiki/web:latest
+MCP_IMAGE=registry.gitlab.com/vmhq/agent-wiki/mcp:latest
+```
 
+Pull and start the published images:
+
+```bash
 docker compose pull
 docker compose up -d
+```
+
+Override these variables in `.env` only if you want to deploy a different tag or registry:
+
+```bash
+WEB_IMAGE=registry.gitlab.com/vmhq/agent-wiki/web:sha-<short-sha>
+MCP_IMAGE=registry.gitlab.com/vmhq/agent-wiki/mcp:sha-<short-sha>
 ```
 
 ---

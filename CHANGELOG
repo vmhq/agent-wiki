@@ -1,0 +1,15 @@
+# Changelog
+
+## Unreleased
+
+### Changed
+
+- Updated Docker Compose defaults to use GitLab Container Registry images:
+  `registry.gitlab.com/vmhq/agent-wiki/web:latest` and
+  `registry.gitlab.com/vmhq/agent-wiki/mcp:latest`.
+- Updated deployment documentation and example environment variables for GitLab-hosted images.
+
+### Fixed
+
+- Fixed GitLab CI Docker Buildx setup by creating an explicit Docker context for DinD TLS certificates.
+- Fixed TypeScript and build pipeline issues for the monorepo verification jobs.

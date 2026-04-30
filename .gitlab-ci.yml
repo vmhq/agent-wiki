@@ -1,0 +1,120 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH'
+
+stages:
+  - verify
+  - containerize
+
+default:
+  interruptible: true
+
+variables:
+  BUN_IMAGE: oven/bun:1.3.12-alpine
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: "1"
+  BUILDX_PLATFORMS: linux/amd64,linux/arm64
+
+.bun_job:
+  image: $BUN_IMAGE
+  before_script:
+    - bun install --frozen-lockfile --linker hoisted
+
+.docker_build_job:
+  image: docker:cli
+  services:
+    - docker:dind
+  stage: containerize
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker context create gitlab-dind --docker "host=${DOCKER_HOST},ca=${DOCKER_CERT_PATH}/ca.pem,cert=${DOCKER_CERT_PATH}/cert.pem,key=${DOCKER_CERT_PATH}/key.pem"
+    - docker buildx create --use --driver docker-container --name gitlab-builder gitlab-dind
+    - docker buildx inspect --bootstrap
+  script:
+    - |
+      set -eu
+
+      IMAGE_REF="${CI_REGISTRY_IMAGE}/${IMAGE_NAME}"
+      CACHE_REF="${CI_REGISTRY_IMAGE}/cache:${IMAGE_NAME}"
+      TAG_ARGS="--tag ${IMAGE_REF}:sha-${CI_COMMIT_SHORT_SHA}"
+      PUSH_IMAGE="false"
+
+      if [ -n "${CI_COMMIT_BRANCH:-}" ]; then
+        TAG_ARGS="${TAG_ARGS} --tag ${IMAGE_REF}:${CI_COMMIT_REF_SLUG}"
+      fi
+
+      if [ "${CI_COMMIT_BRANCH:-}" = "${CI_DEFAULT_BRANCH:-}" ]; then
+        TAG_ARGS="${TAG_ARGS} --tag ${IMAGE_REF}:latest"
+        PUSH_IMAGE="true"
+      fi
+
+      if [ -n "${CI_COMMIT_TAG:-}" ]; then
+        TAG_ARGS="${TAG_ARGS} --tag ${IMAGE_REF}:${CI_COMMIT_TAG}"
+        PUSH_IMAGE="true"
+
+        case "${CI_COMMIT_TAG}" in
+          v[0-9]*.[0-9]*.[0-9]*)
+            VERSION="${CI_COMMIT_TAG#v}"
+            MINOR="${VERSION%.*}"
+            TAG_ARGS="${TAG_ARGS} --tag ${IMAGE_REF}:${VERSION} --tag ${IMAGE_REF}:${MINOR}"
+            ;;
+        esac
+      fi
+
+      PUSH_ARGS=""
+      CACHE_TO_ARGS=""
+      if [ "${PUSH_IMAGE}" = "true" ]; then
+        PUSH_ARGS="--push"
+        CACHE_TO_ARGS="--cache-to type=registry,ref=${CACHE_REF},mode=max"
+      fi
+
+      docker buildx build \
+        --file "${DOCKERFILE}" \
+        --platform "${BUILDX_PLATFORMS}" \
+        --cache-from "type=registry,ref=${CACHE_REF}" \
+        ${CACHE_TO_ARGS} \
+        ${TAG_ARGS} \
+        ${PUSH_ARGS} \
+        .
+  after_script:
+    - docker buildx rm gitlab-builder || true
+    - docker context rm gitlab-dind || true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+test:
+  extends: .bun_job
+  stage: verify
+  script:
+    - bun run test
+
+typecheck:
+  extends: .bun_job
+  stage: verify
+  script:
+    - bun run typecheck
+
+build:
+  extends: .bun_job
+  stage: verify
+  script:
+    - bun run build
+
+build:web-image:
+  extends: .docker_build_job
+  variables:
+    IMAGE_NAME: web
+    DOCKERFILE: Dockerfile.web
+
+build:mcp-image:
+  extends: .docker_build_job
+  variables:
+    IMAGE_NAME: mcp
+    DOCKERFILE: Dockerfile.mcp
