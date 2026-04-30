@@ -1,0 +1,315 @@
+# Agent Wiki
+
+An AI-maintained knowledge base built on the [LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) by Andrej Karpathy. Instead of running RAG on every query, knowledge is compiled once into persistent Markdown entries that grow richer over time as AI agents ingest new sources and update existing pages.
+
+## What's included
+
+| Component | Port | Description |
+|-----------|------|-------------|
+| **Web app** | `3000` | Index, editor, Markdown viewer, full-text search, Obsidian-style graph |
+| **MCP server** | `3001` | Model Context Protocol server — lets Claude and other AI agents read/write the wiki |
+| **Wiki core** | — | Shared storage, validation, search, graph, backlinks, and history package |
+
+**Stack:** Next.js 16 · TypeScript 6 · Tailwind CSS v4 · react-force-graph-2d · `@modelcontextprotocol/sdk` · Express 5 · OAuth 2.0 + PKCE · Bun workspaces · Docker · GitLab CI/CD · express-rate-limit
+
+---
+
+## Quick start
+
+### Local development
+
+```bash
+# 1. Install dependencies
+bun install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env — at minimum change WIKI_API_KEY and WIKI_OAUTH_PASSWORD
+
+# 3. Start both services in parallel
+bun run dev
+```
+
+- Web app → http://localhost:3000
+- MCP server → http://localhost:3001
+
+### Docker Compose
+
+```bash
+cp .env.example .env
+# Edit .env with your secrets
+
+docker compose up -d
+```
+
+By default, Compose pulls the pre-built images published by this project's GitLab pipeline:
+
+- `registry.gitlab.com/vmhq/agent-wiki/web:latest`
+- `registry.gitlab.com/vmhq/agent-wiki/mcp:latest`
+
+To rebuild after code changes:
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## Project structure
+
+```
+agent-wiki/
+├── apps/
+│   ├── web/                    # Next.js 16 web application
+│   │   ├── app/
+│   │   │   ├── page.tsx        # Index — list all wiki entries
+│   │   │   ├── wiki/[slug]/    # Markdown viewer
+│   │   │   ├── search/         # Full-text search
+│   │   │   ├── graph/          # Obsidian-style knowledge graph
+│   │   │   └── api/            # REST API (wiki CRUD + search + graph)
+│   │   ├── components/
+│   │   │   ├── WikiCard.tsx
+│   │   │   ├── MarkdownRenderer.tsx   # react-markdown + wikilinks
+│   │   │   ├── GraphView.tsx          # react-force-graph-2d
+│   │   │   ├── SearchBar.tsx
+│   │   │   └── Navbar.tsx
+│   │   └── lib/wiki.ts         # File-system operations + graph parser
+│   └── mcp/                    # MCP server
+│       └── src/
+│           ├── index.ts        # Express server (Streamable HTTP + SSE)
+│           ├── server.ts       # MCP tools definition
+│           ├── auth.ts         # OAuth 2.0 server + API key middleware
+│           └── wiki.ts         # Wiki core adapter
+├── packages/
+│   └── wiki/                   # Shared storage, schemas, cache, graph, history
+├── wiki/                       # Markdown files (Docker shared volume)
+├── Dockerfile.web
+├── Dockerfile.mcp
+├── docker-compose.yml
+├── .gitlab-ci.yml
+└── .github/workflows/docker.yml
+```
+
+---
+
+## Wiki entry format
+
+Each entry is a `.md` file with YAML frontmatter:
+
+```markdown
+---
+title: Neural Networks
+tags:
+  - ml
+  - deep-learning
+created: "2025-01-01T00:00:00.000Z"
+updated: "2025-01-01T00:00:00.000Z"
+---
+
+# Neural Networks
+
+Content here. Use [[wikilinks]] to connect entries.
+
+See also: [[transformers]], [[backpropagation]]
+```
+
+Link between entries with `[[slug]]` or `[[slug|custom label]]`. The graph view at `/graph` renders all connections.
+
+---
+
+## REST API
+
+Base URL: `http://localhost:3000/api`
+
+| Method | Endpoint | Body | Description |
+|--------|----------|------|-------------|
+| `GET` | `/wiki` | — | List all entries (metadata only) |
+| `POST` | `/wiki` | `{slug, title, content, tags?}` | Create entry |
+| `GET` | `/wiki/:slug` | — | Get full entry |
+| `PUT` | `/wiki/:slug` | `{content, title?, tags?}` | Replace entry |
+| `PATCH` | `/wiki/:slug` | `{operation, ...}` | Patch entry (see below) |
+| `DELETE` | `/wiki/:slug` | — | Delete entry |
+| `GET` | `/search?q=...` | — | Full-text search |
+| `GET` | `/graph` | — | Graph nodes + links, including missing linked pages |
+
+### PATCH operations
+
+```jsonc
+// Append content at the end
+{ "operation": "append", "content": "## New section\n..." }
+
+// Prepend content at the beginning
+{ "operation": "prepend", "content": "> Note: ..." }
+
+// Find and replace text
+{ "operation": "replace", "search": "old text", "replacement": "new text" }
+
+// Insert after an anchor
+{ "operation": "insert_after", "anchor": "## Introduction", "content": "..." }
+
+// Insert before an anchor
+{ "operation": "insert_before", "anchor": "## References", "content": "..." }
+```
+
+---
+
+## MCP server
+
+The MCP server runs on port `3001` and exposes tools to any MCP-compatible client (Claude Desktop, claude.ai, custom agents).
+
+### Available tools
+
+| Tool | Description |
+|------|-------------|
+| `wiki_list` | List all entries with metadata |
+| `wiki_get` | Get full content of an entry |
+| `wiki_create` | Create a new entry |
+| `wiki_update` | Replace entire entry content |
+| `wiki_patch` | Modify part of an entry (append / prepend / replace / insert) |
+| `wiki_delete` | Delete an entry |
+| `wiki_search` | Full-text search across all entries |
+| `wiki_backlinks` | List entries that link to a slug |
+| `wiki_graph` | Return graph data, including missing linked pages |
+| `wiki_history` | List saved snapshots for an entry |
+
+### Connecting from Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "agent-wiki": {
+      "type": "http",
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+Replace `YOUR_API_KEY` with the value of `WIKI_API_KEY` in your `.env`.
+
+### Connecting from claude.ai (OAuth)
+
+1. In claude.ai → **Settings → Integrations → Add MCP server**
+2. Enter the MCP server URL: `http://your-server:3001`
+3. Claude will discover the OAuth metadata automatically and redirect you to authorize
+4. Enter your `WIKI_OAUTH_PASSWORD` to allow access
+
+The server exposes a full OAuth 2.0 authorization server at `/.well-known/oauth-authorization-server` (RFC 8414) with PKCE support.
+
+### Connecting via API key (curl / scripts)
+
+```bash
+# List entries
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:3001/health
+
+# MCP JSON-RPC (Streamable HTTP transport)
+curl -X POST http://localhost:3001/mcp \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+---
+
+## Environment variables
+
+See [`.env.example`](.env.example) for all variables. Required changes before production:
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `WIKI_API_KEY` | `changeme` | **Change this** — used for API key auth |
+| `WIKI_OAUTH_PASSWORD` | `changeme` | **Change this** — OAuth login password |
+| `WIKI_JWT_SECRET` | `change-this-...` | **Change this** — must be a long random string |
+| `MCP_BASE_URL` | `http://localhost:3001` | Set to public URL when deploying (needed for OAuth) |
+| `WIKI_DIR` | `/wiki` | Path to wiki files (Docker volume or local path) |
+
+Generate a secure secret:
+
+```bash
+openssl rand -hex 32
+```
+
+---
+
+## Security
+
+- **Rate limiting**: Both services implement rate limiting — 100 requests per 15 minutes per IP on API routes, with stricter limits (10/min) on OAuth endpoints
+- **API key storage**: The web editor stores the API key in `sessionStorage` (clears when the tab closes), never in `localStorage`
+- **Auth**: Write operations require `Authorization: Bearer <WIKI_API_KEY>` on both web API and MCP server
+- **CORS**: MCP server allows all origins (`*`) by design — authentication is enforced via Bearer token
+
+---
+
+## CI/CD — GitLab Pipelines
+
+The repository now includes a root [`.gitlab-ci.yml`](.gitlab-ci.yml) designed for GitLab CI/CD.
+
+Pipeline behavior:
+
+- **Merge requests** run verification jobs (`test`, `typecheck`, `build`) and also build both Docker images without pushing them
+- **Default branch pushes** run the same verification jobs and push fresh multi-arch images to the GitLab container registry
+- **Version tags** like `v1.2.3` also push versioned images, including `1.2.3` and `1.2`
+
+Images are published to the GitLab container registry using `CI_REGISTRY_IMAGE`:
+
+- `$CI_REGISTRY_IMAGE/web`
+- `$CI_REGISTRY_IMAGE/mcp`
+
+Published tags include:
+
+- `latest` on the default branch
+- `sha-<short-sha>` on every image build
+- `<branch-slug>` on branch-based builds
+- `vX.Y.Z`, `X.Y.Z`, and `X.Y` on semantic version tags
+
+The Docker jobs use `docker buildx` with `docker:dind`, which matches GitLab's documented approach for multi-platform builds and registry publishing. Your runner must therefore allow Docker-in-Docker for the image-publishing stage.
+
+Docker Compose uses the GitLab registry images by default:
+
+```bash
+WEB_IMAGE=registry.gitlab.com/vmhq/agent-wiki/web:latest
+MCP_IMAGE=registry.gitlab.com/vmhq/agent-wiki/mcp:latest
+```
+
+Pull and start the published images:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Override these variables in `.env` only if you want to deploy a different tag or registry:
+
+```bash
+WEB_IMAGE=registry.gitlab.com/vmhq/agent-wiki/web:sha-<short-sha>
+MCP_IMAGE=registry.gitlab.com/vmhq/agent-wiki/mcp:sha-<short-sha>
+```
+
+---
+
+## Karpathy LLM Wiki pattern
+
+This project implements the three-layer architecture from the gist:
+
+```
+Raw sources  →  [Ingest]  →  Wiki (Markdown files)  →  [Query]  →  Answer
+                                      ↑
+                                  [Lint / prune]
+```
+
+- **Ingest**: Point an AI agent at a document/URL, ask it to update relevant wiki pages using `wiki_create` / `wiki_patch`
+- **Query**: Ask the agent a question; it calls `wiki_search` + `wiki_get` to retrieve context
+- **Lint**: Periodically ask the agent to call `wiki_list` and identify orphans, contradictions, or stale pages
+
+The key advantage over RAG: connections between concepts are compiled into the wiki once, so queries get pre-synthesized knowledge rather than raw fragments.
+
+---
+
+## License
+
+MIT

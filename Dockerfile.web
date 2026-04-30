@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1
+# Build stages run on the host platform (avoids QEMU SIGILL with SWC/Rust).
+# The runner stage uses the target platform; Next.js output is plain JS.
+FROM --platform=$BUILDPLATFORM oven/bun:1.3.12-alpine AS base
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+FROM --platform=$BUILDPLATFORM base AS deps
+WORKDIR /app
+COPY package.json bun.lock ./
+COPY apps/web/package.json ./apps/web/
+COPY apps/mcp/package.json ./apps/mcp/
+COPY packages/wiki/package.json ./packages/wiki/
+RUN bun install --frozen-lockfile
+
+# ── Builder ───────────────────────────────────────────────────────────────────
+FROM --platform=$BUILDPLATFORM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/wiki/node_modules ./packages/wiki/node_modules
+COPY package.json bun.lock ./
+COPY apps/mcp/package.json ./apps/mcp/package.json
+COPY packages/wiki ./packages/wiki
+COPY apps/web ./apps/web
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+RUN bun run --filter @agent-wiki/wiki build
+WORKDIR /app/apps/web
+RUN bun run build
+
+# ── Runner ────────────────────────────────────────────────────────────────────
+FROM oven/bun:1.3.12-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV WIKI_DIR=/wiki
+
+# su-exec: drop privileges from root to app user inside entrypoint
+RUN apk add --no-cache su-exec
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# standalone output (outputFileTracingRoot set to monorepo root) puts server.js
+# at apps/web/server.js relative to the standalone dir
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+RUN mkdir -p ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+
+# Entrypoint: runs as root, fixes /wiki permissions, then drops to nextjs
+COPY docker/entrypoint-web.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 3000
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["bun", "apps/web/server.js"]
