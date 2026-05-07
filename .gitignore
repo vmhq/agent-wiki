@@ -17,5 +17,9 @@ out/
 *.log
 coverage/
 
+# AI agent skills (project-local, not tracked in repo)
+.agents/
+skills-lock.json
+
 # Wiki data (optional — if you want to track wiki files, remove this)
 # wiki/
