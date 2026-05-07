@@ -1,0 +1,19 @@
+[install]
+# Use hoisted linker for Next.js compatibility
+linker = "hoisted"
+# Save text lockfile (bun.lock) for readability in git
+saveTextLockfile = true
+
+[install.scopes]
+# Ensure workspace packages resolve correctly
+"@agent-wiki" = { workspace = true }
+
+[test]
+# Run tests from the packages directory
+root = "."
+timeout = 10000
+coverage = false
+
+[run]
+# Auto-alias node → bun in scripts
+bun = true

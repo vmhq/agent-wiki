@@ -10,6 +10,7 @@ import {
   updateEntrySchema,
 } from "@/lib/wiki";
 import { requireWriteAuth } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 interface Ctx {
   params: Promise<{ slug: string }>;
@@ -29,6 +30,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   try {
     const { content, title, tags } = updateEntrySchema.parse(await req.json());
     const entry = updateEntry(slug, content, { title, tags });
+    revalidateTag("wiki-entries", "minutes");
     return NextResponse.json({ entry });
   } catch (err) {
     return NextResponse.json({ error: getPublicErrorMessage(err) }, { status: errorStatus(err) });
@@ -42,6 +44,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
     const { operation, content, search, replacement, anchor } = patchEntrySchema.parse(await req.json());
     const entry = patchEntry(slug, operation, { content, search, replacement, anchor });
+    revalidateTag("wiki-entries", "minutes");
     return NextResponse.json({ entry });
   } catch (err) {
     return NextResponse.json({ error: getPublicErrorMessage(err) }, { status: errorStatus(err) });
@@ -54,6 +57,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   const { slug } = await params;
   try {
     deleteEntry(slug);
+    revalidateTag("wiki-entries", "minutes");
     return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: getPublicErrorMessage(err) }, { status: errorStatus(err) });

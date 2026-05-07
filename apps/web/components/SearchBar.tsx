@@ -22,16 +22,19 @@ export function SearchBar({ defaultValue = "" }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative">
+    <form onSubmit={handleSubmit} className="relative" role="search" aria-label="Wiki search">
       <Search
         size={16}
         className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-wiki-muted)] pointer-events-none"
+        aria-hidden="true"
       />
       <input
-        type="text"
+        type="search"
+        name="q"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Search"
+        aria-label="Search wiki entries"
         className="wiki-ring w-full rounded-lg bg-[var(--color-wiki-surface)] py-2.5 pl-10 pr-10 text-sm text-[var(--color-wiki-text)] placeholder-[var(--color-wiki-muted)] transition-shadow focus:shadow-[var(--shadow-wiki-focus)] focus:outline-none"
       />
       {value && (

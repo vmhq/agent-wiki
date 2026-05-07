@@ -1,10 +1,8 @@
-import { getGraphData } from "@/lib/wiki";
+import { getGraphDataCached } from "@/lib/wiki";
 import { GraphView } from "@/components/GraphView";
 
-export const dynamic = "force-dynamic";
-
-export default function GraphPage() {
-  const graphData = getGraphData();
+export default async function GraphPage() {
+  const graphData = await getGraphDataCached();
   return (
     <div>
       <div className="mb-6">

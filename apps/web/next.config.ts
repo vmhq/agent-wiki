@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   // Required for workspaces: traces files relative to the monorepo root
   // so the standalone output preserves the apps/web/server.js path structure
   outputFileTracingRoot: path.join(__dirname, "../../"),
+  // Enable PPR: mix static, cached, and dynamic content per route
+  cacheComponents: true,
   ...(process.env.WIKI_DIR ? { env: { WIKI_DIR: process.env.WIKI_DIR } } : {}),
 };
 

@@ -6,6 +6,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import Link from "next/link";
+import { useMemo } from "react";
 import type { Components } from "react-markdown";
 import "highlight.js/styles/github.css";
 
@@ -52,7 +53,11 @@ const components: Components = {
 };
 
 export function MarkdownRenderer({ content, existingSlugs }: Props) {
-  const processed = preprocessWikilinks(content, existingSlugs ? new Set(existingSlugs) : undefined);
+  const slugSet = useMemo(
+    () => (existingSlugs ? new Set(existingSlugs) : undefined),
+    [existingSlugs]
+  );
+  const processed = preprocessWikilinks(content, slugSet);
 
   return (
     <ReactMarkdown
