@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createEntry, createEntrySchema, errorStatus, getPublicErrorMessage, listEntries } from "@/lib/wiki";
 import { requireWriteAuth } from "@/lib/auth";
-import { revalidateTag } from "next/cache";
 
 export async function GET() {
   try {
@@ -18,7 +17,6 @@ export async function POST(req: NextRequest) {
   try {
     const { slug, title, content, tags } = createEntrySchema.parse(await req.json());
     const entry = createEntry(slug, title, content, tags);
-    revalidateTag("wiki-entries", "minutes");
     return NextResponse.json({ entry }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ error: getPublicErrorMessage(err) }, { status: errorStatus(err) });

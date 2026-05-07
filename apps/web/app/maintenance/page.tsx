@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AlertTriangle, CircleDashed, Clock3, FilePlus, Tags } from "lucide-react";
-import { getMaintenanceReportCached, type Backlink, type MaintenanceReport, type WikiMeta } from "@/lib/wiki";
+import { getMaintenanceReport, type Backlink, type MaintenanceReport, type WikiMeta } from "@/lib/wiki";
 import { formatRelativeDate } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 function Panel({
   title,
@@ -28,8 +30,8 @@ function Panel({
   );
 }
 
-export default async function MaintenancePage() {
-  const report: MaintenanceReport = await getMaintenanceReportCached();
+export default function MaintenancePage() {
+  const report: MaintenanceReport = getMaintenanceReport();
 
   return (
     <div>

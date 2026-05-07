@@ -9,7 +9,6 @@ import {
   type WikiEntry,
   type WikiMeta,
 } from "@agent-wiki/wiki";
-import { cacheLife, cacheTag } from "next/cache";
 
 export type { Backlink, GraphData, GraphLink, GraphNode, MaintenanceReport, PatchOperation, WikiEntry, WikiMeta };
 export {
@@ -49,18 +48,3 @@ export const getGraphData = () => getStore().getGraphData();
 export const getBacklinks = (slug: string) => getStore().getBacklinks(slug);
 export const getMaintenanceReport = () => getStore().getMaintenanceReport();
 export const listHistory = (slug: string) => getStore().listHistory(slug);
-
-// Cached variants for expensive read operations — invalidated on wiki mutations
-export async function getGraphDataCached(): Promise<GraphData> {
-  "use cache";
-  cacheTag("wiki-entries");
-  cacheLife("minutes");
-  return getStore().getGraphData();
-}
-
-export async function getMaintenanceReportCached(): Promise<MaintenanceReport> {
-  "use cache";
-  cacheTag("wiki-entries");
-  cacheLife("minutes");
-  return getStore().getMaintenanceReport();
-}
